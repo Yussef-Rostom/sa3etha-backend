@@ -17,7 +17,7 @@ const serviceSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Service = mongoose.model("Service", serviceSchema);

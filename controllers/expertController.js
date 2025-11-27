@@ -10,8 +10,138 @@ const getAvailableExperts = async (req, res) => {
       role: "expert",
       "expertProfile.isAvailable": true,
     })
-      .select("-phone")
-      .populate("expertProfile.serviceTypes expertProfile.averagePricePerHour");
+      .select("-password -phone -email -fcmToken -refreshToken -otp -otpExpires")
+      .populate({
+        path: "expertProfile.serviceTypes",
+        model: "SubService",
+        populate: {
+          path: "service",
+          model: "Service",
+        },
+      });
+    
+    res.status(200).json({ experts });
+  } catch (error) {
+    res.status(500).json({ message: "Server error: " + error.message, error });
+  }
+};
+
+// Get all near experts by service id
+const getNearExperts = async (req, res) => {
+  try {
+    const { serviceId, subServiceId, coordinates, governorate, range } = req.query;
+    
+    let searchCoordinates;
+    let searchGovernorate = governorate;
+    
+    // If coordinates are provided in query, use them
+    if (coordinates && Array.isArray(coordinates) && coordinates.length === 2) {
+      const [long, lat] = coordinates.map(parseFloat);
+      if (!isNaN(lat) && !isNaN(long)) {
+        searchCoordinates = [long, lat];
+      }
+    }
+    
+    // If no coordinates/governorate provided and user is authenticated, try to use user's location
+    if (!searchCoordinates && !searchGovernorate && req.user) {
+      try {
+        const user = await User.findById(req.user.id);
+        if (user?.location?.coordinates) {
+          const [long, lat] = user.location.coordinates.map(parseFloat);
+          if (!isNaN(lat) && !isNaN(long)) {
+            searchCoordinates = [long, lat];
+          }
+        }
+        if (user?.location?.governorate) {
+          searchGovernorate = user.location.governorate;
+        }
+      } catch (userError) {
+        // If user lookup fails, continue without user location
+        console.error("Error fetching user location:", userError);
+      }
+    }
+
+    const pipeline = [];
+
+    if (searchCoordinates) {
+      if (range) {
+        pipeline.push({
+          $geoNear: {
+            near: { type: "Point", coordinates: searchCoordinates },
+            distanceField: "distance",
+            maxDistance: parseInt(range) * 1000,
+            spherical: true,
+            distanceMultiplier: 0.001,
+          },
+        });
+      } else {
+        const detectedGovernorate = getGovernorate(searchCoordinates[0], searchCoordinates[1]);
+        if (detectedGovernorate) {
+          pipeline.push({ $match: { "location.governorate": detectedGovernorate } });
+        }
+      }
+    } else if (searchGovernorate) {
+      pipeline.push({
+        $match: { "location.governorate": searchGovernorate },
+      });
+    }
+
+    const matchQuery = {
+      role: "expert",
+      "expertProfile.isAvailable": true,
+    };
+
+    if (subServiceId) {
+      matchQuery["expertProfile.serviceTypes"] = new mongoose.Types.ObjectId(
+        subServiceId,
+      );
+    } else if (serviceId) {
+      const subServices = await SubService.find({ service: serviceId }).select(
+        "_id",
+      );
+      const subServiceIds = subServices.map((s) => s._id);
+      matchQuery["expertProfile.serviceTypes"] = { $in: subServiceIds };
+    }
+
+    pipeline.push({ $match: matchQuery });
+    pipeline.push({
+      $project: {
+        password: 0,
+        phone: 0,
+        email: 0,
+        fcmToken: 0,
+        refreshToken: 0,
+        otp: 0,
+        otpExpires: 0,
+      },
+    });
+
+    const experts = await User.aggregate(pipeline);
+    await User.populate(experts, {
+      path: "expertProfile.serviceTypes",
+      model: "SubService",
+      populate: {
+        path: "service",
+        model: "Service",
+      },
+    });
+
+    // Track user's last search if authenticated
+    if (req.user && (serviceId || subServiceId)) {
+      try {
+        await User.findByIdAndUpdate(req.user.id, {
+          lastSearch: {
+            service: serviceId || null,
+            subService: subServiceId || null,
+            timestamp: new Date(),
+          },
+        });
+      } catch (trackError) {
+        // Log error but don't fail the request
+        console.error("Error tracking user search:", trackError);
+      }
+    }
+
     res.status(200).json({ experts });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
@@ -24,8 +154,12 @@ const updateAvailability = async (req, res) => {
     const { isAvailable } = req.body;
     const expert = await User.findById(req.user.id);
 
-    if (!expert || expert.role !== "expert") {
-      return res.status(404).json({ message: "Expert not found" });
+    if (!expert) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!expert.expertProfile) {
+      return res.status(400).json({ message: "Expert profile not found" });
     }
 
     expert.expertProfile.isAvailable = isAvailable;
@@ -33,7 +167,11 @@ const updateAvailability = async (req, res) => {
 
     res.status(200).json({
       message: "Availability updated successfully",
-      expert,
+      expert: {
+        _id: expert._id,
+        name: expert.name,
+        isAvailable: expert.expertProfile.isAvailable,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
@@ -43,127 +181,89 @@ const updateAvailability = async (req, res) => {
 // Update expert profile
 const updateExpertProfile = async (req, res) => {
   try {
-    const { name, phone, imageUrl, location, ...restOfBody } = req.body;
-    const { averageRating, ...expertProfileFields } = restOfBody;
+    const {
+      name,
+      imageUrl,
+      expertProfile: expertProfileUpdates,
+    } = req.body;
+    const phone = req.body.phone ? req.body.phone : undefined;
+
     const expert = await User.findById(req.user.id);
 
-    if (!expert || expert.role !== "expert") {
-      return res.status(404).json({ message: "Expert not found" });
+    if (!expert) {
+      return res.status(404).json({ message: "User not found" });
     }
 
+    if (!expert.expertProfile) {
+      return res.status(400).json({ message: "Expert profile not found" });
+    }
+
+    // Update top-level fields
+    if (name) expert.name = name;
     if (phone && phone !== expert.phone) {
       const existingUser = await User.findOne({ phone });
-      if (existingUser) {
+      if (existingUser && existingUser._id.toString() !== expert._id.toString()) {
         return res.status(400).json({ message: "Phone number already in use" });
       }
       expert.phone = phone;
     }
+    if (imageUrl) expert.imageUrl = imageUrl;
 
-    if (name) {
-      expert.name = name;
+    // Update location using top-level coordinates and governorate
+    if (req.body.coordinates) {
+      const [lon, lat] = req.body.coordinates;
+      const calculatedGovernorate = getGovernorate(lon, lat);
+      expert.location = {
+        type: "Point",
+        coordinates: req.body.coordinates,
+        governorate:
+          req.body.governorate || calculatedGovernorate || expert.location?.governorate,
+      };
     }
 
-    if (imageUrl) {
-      expert.imageUrl = imageUrl;
+    // Update nested expertProfile fields
+    if (expertProfileUpdates) {
+      const {
+        serviceTypes,
+        description,
+        averagePricePerHour,
+        yearsExperience,
+      } = expertProfileUpdates;
+      if (serviceTypes) expert.expertProfile.serviceTypes = serviceTypes;
+      if (description) expert.expertProfile.description = description;
+      if (averagePricePerHour)
+        expert.expertProfile.averagePricePerHour = averagePricePerHour;
+      if (yearsExperience)
+        expert.expertProfile.yearsExperience = yearsExperience;
     }
-
-    if (location && location.coordinates) {
-      const [lon, lat] = location.coordinates;
-      const governorate = getGovernorate(lon, lat);
-      console.log("Determined governorate:", governorate);
-      expert.location.coordinates = location.coordinates;
-      if (governorate) {
-        expert.location.governorate = governorate;
-      }
-    }
-
-    Object.assign(expert.expertProfile, expertProfileFields);
 
     await expert.save();
 
     res.status(200).json({
       message: "Expert profile updated successfully",
-      expert,
+      expert: {
+        _id: expert._id,
+        name: expert.name,
+        phone: expert.phone,
+        imageUrl: expert.imageUrl,
+        location: expert.location,
+        expertProfile: expert.expertProfile,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
   }
 };
 
-// Get all near experts by service id
-const getNearExperts = async (req, res) => {
-  let { serviceId, subServiceId, lat, long, range } = req.query;
-
-  const pipeline = [];
-
-  // Optional: Add geo-spatial query if lat and long are provided
-  if (!lat || !long) {
-    const user = await User.findById(req.user.id);
-    if (user && user.location && user.location.coordinates) {
-      long = user.location.coordinates[0];
-      lat = user.location.coordinates[1];
-    }
-  }
-
-  if (lat && long) {
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(long);
-
-    if (!isNaN(latitude) && !isNaN(longitude)) {
-      pipeline.push({
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: [longitude, latitude],
-          },
-          distanceField: "distance",
-          maxDistance: range ? parseInt(range) * 1000 : 10000, // range in km
-          spherical: true,
-          distanceMultiplier: 0.001,
-        },
-      });
-    }
-  }
-
-  const matchQuery = {
-    role: "expert",
-    "expertProfile.isAvailable": true,
-  };
-
+const getExpertProfileById = async (req, res) => {
   try {
-    if (subServiceId) {
-      matchQuery["expertProfile.serviceTypes"] = new mongoose.Types.ObjectId(
-        subServiceId
-      );
-    } else if (serviceId) {
-      // Find sub-services for the given serviceId
-      const subServices = await SubService.find({ service: serviceId }).select(
-        "_id"
-      );
-      const subServiceIds = subServices.map((s) => s._id);
-
-      // Find experts that have any of these sub-services
-      matchQuery["expertProfile.serviceTypes"] = { $in: subServiceIds };
+    const expert = await User.findById(req.params.id).select(
+      "-password -phone -email",
+    );
+    if (!expert || expert.role !== "expert") {
+      return res.status(404).json({ message: "Expert not found" });
     }
-
-    pipeline.push({
-      $match: matchQuery,
-    });
-
-    pipeline.push({
-      $project: {
-        password: 0,
-        phone: 0,
-      },
-    });
-
-    let experts = await User.aggregate(pipeline);
-
-    experts = await User.populate(experts, {
-      path: "expertProfile.serviceTypes",
-    });
-
-    res.status(200).json({ experts });
+    res.status(200).json({ expert });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
   }
@@ -174,4 +274,5 @@ module.exports = {
   updateAvailability,
   updateExpertProfile,
   getNearExperts,
+  getExpertProfileById,
 };

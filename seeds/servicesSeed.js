@@ -9,205 +9,220 @@ const DB_URI = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWO
 // The data from your services.json file
 const servicesData = [
   {
-    "name": "Home Maintenance",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762123935/sa3tha%20services%20images/1762123929580-Picsart_25-11-03_00-50-54-652.png.png",
-    "description": "Services to keep your home in top condition, from pipes to wires.",
-    "subservices": [
+    name: "صيانة المنزل",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762123935/sa3tha%20services%20images/1762123929580-Picsart_25-11-03_00-50-54-652.png.png",
+    description:
+      "خدمات للحفاظ على منزلك في أفضل حالة، من الأنابيب إلى الأسلاك.",
+    subservices: [
       {
-        "name": "Plumbing",
-        "description": "Fixing leaks, unclogging drains, and installing pipes."
+        name: "السباكة",
+        description: "إصلاح التسريبات وفتح المصارف وتركيب الأنابيب.",
       },
       {
-        "name": "Electrical Work",
-        "description": "Installing fixtures, fixing wiring, and ensuring safety."
+        name: "الأعمال الكهربائية",
+        description: "تركيب التجهيزات وإصلاح الأسلاك وضمان السلامة.",
       },
       {
-        "name": "Carpentry",
-        "description": "Building, repairing, and installing wooden fixtures and furniture."
+        name: "النجارة",
+        description:
+          "بناء وإصلاح وتركيب التجهيزات والأثاث الخشبي.",
       },
       {
-        "name": "Painting",
-        "description": "Interior and exterior painting services for a fresh look."
+        name: "الدهان",
+        description:
+          "خدمات الدهان الداخلي والخارجي لمظهر جديد.",
       },
       {
-        "name": "Tiling",
-        "description": "Installing and repairing floor and wall tiles."
+        name: "تركيب البلاط",
+        description: "تركيب وإصلاح بلاط الأرضيات والجدران.",
       },
       {
-        "name": "Locksmith",
-        "description": "Installing, repairing, and opening locks."
-      }
-    ]
+        name: "صانع الأقفال",
+        description: "تركيب وإصلاح وفتح الأقفال.",
+      },
+    ],
   },
   {
-    "name": "Appliance Repair",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762123048/sa3tha%20services%20images/1762123043594-Picsart_25-11-02_22-44-28-938.png.png",
-    "description": "Get your essential home appliances fixed by professionals.",
-    "subservices": [
+    name: "إصلاح الأجهزة",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762123048/sa3tha%20services%20images/1762123043594-Picsart_25-11-02_22-44-28-938.png.png",
+    description: "إصلاح أجهزتك المنزلية الأساسية بواسطة محترفين.",
+    subservices: [
       {
-        "name": "AC Repair",
-        "description": "Servicing and repairing all types of air conditioners."
+        name: "إصلاح المكيفات",
+        description: "صيانة وإصلاح جميع أنواع المكيفات.",
       },
       {
-        "name": "Refrigerator Repair",
-        "description": "Fixing cooling issues, leaks, and broken refrigerator parts."
+        name: "إصلاح الثلاجات",
+        description:
+          "إصلاح مشاكل التبريد والتسريبات وأجزاء الثلاجة المعطلة.",
       },
       {
-        "name": "Washing Machine Repair",
-        "description": "Repairing washers that don't spin, drain, or turn on."
+        name: "إصلاح الغسالات",
+        description: "إصلاح الغسالات التي لا تدور أو تصرف أو تعمل.",
       },
       {
-        "name": "TV Repair",
-        "description": "Fixing screen issues, sound problems, and power failures."
+        name: "إصلاح التلفزيونات",
+        description:
+          "إصلاح مشاكل الشاشة ومشاكل الصوت وأعطال الطاقة.",
       },
       {
-        "name": "Microwave Repair",
-        "description": "Repairing microwaves that don't heat or turn on."
-      }
-    ]
+        name: "إصلاح الميكروويف",
+        description: "إصلاح أجهزة الميكروويف التي لا تسخن أو تعمل.",
+      },
+    ],
   },
   {
-    "name": "Cleaning Services",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762124089/sa3tha%20services%20images/1762124081759-Picsart_25-11-02_22-39-44-198.png.png",
-    "description": "Professional cleaning for homes, offices, and more.",
-    "subservices": [
+    name: "خدمات التنظيف",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762124089/sa3tha%20services%20images/1762124081759-Picsart_25-11-02_22-39-44-198.png.png",
+    description: "تنظيف احترافي للمنازل والمكاتب والمزيد.",
+    subservices: [
       {
-        "name": "House Cleaning",
-        "description": "General cleaning for your home, including dusting and mopping."
+        name: "تنظيف المنازل",
+        description:
+          "تنظيف عام لمنزلك، بما في ذلك إزالة الغبار والمسح.",
       },
       {
-        "name": "Deep Cleaning",
-        "description": "A thorough, top-to-bottom cleaning service for all rooms."
+        name: "التنظيف العميق",
+        description:
+          "خدمة تنظيف شاملة من الأعلى إلى الأسفل لجميع الغرف.",
       },
       {
-        "name": "Office Cleaning",
-        "description": "Keeping your workspace clean, hygienic, and professional."
+        name: "تنظيف المكاتب",
+        description:
+          "الحفاظ على مساحة عملك نظيفة وصحية ومهنية.",
       },
       {
-        "name": "Carpet Cleaning",
-        "description": "Deep cleaning and stain removal for carpets and rugs."
+        name: "تنظيف السجاد",
+        description: "تنظيف عميق وإزالة البقع من السجاد والبُسط.",
       },
       {
-        "name": "Window Cleaning",
-        "description": "Streak-free cleaning for interior and exterior windows."
-      }
-    ]
+        name: "تنظيف النوافذ",
+        description: "تنظيف خالٍ من الخطوط للنوافذ الداخلية والخارجية.",
+      },
+    ],
   },
   {
-    "name": "Construction",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762124154/sa3tha%20services%20images/1762124148474-Picsart_25-11-02_22-48-23-489.png.png",
-    "description": "Building, renovating, and structural work from the ground up.",
-    "subservices": [
+    name: "البناء",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762124154/sa3tha%20services%20images/1762124148474-Picsart_25-11-02_22-48-23-489.png.png",
+    description:
+      "البناء والتجديد والأعمال الإنشائية من الأساس.",
+    subservices: [
       {
-        "name": "General Construction",
-        "description": "Managing and executing all phases of a building project."
+        name: "البناء العام",
+        description: "إدارة وتنفيذ جميع مراحل مشروع البناء.",
       },
       {
-        "name": "Renovation",
-        "description": "Updating and remodeling existing structures."
+        name: "التجديد",
+        description: "تحديث وإعادة تصميم الهياكل القائمة.",
       },
       {
-        "name": "Plastering",
-        "description": "Applying plaster to walls and ceilings for a smooth finish."
+        name: "المحارة",
+        description:
+          "تطبيق الجبس على الجدران والأسقف للحصول على تشطيب ناعم.",
       },
       {
-        "name": "Masonry",
-        "description": "Working with brick, stone, and concrete for structures."
+        name: "البناء بالطوب",
+        description: "العمل بالطوب والحجر والخرسانة للهياكل.",
       },
       {
-        "name": "Roofing",
-        "description": "Installing, repairing, and maintaining roofs."
-      }
-    ]
+        name: "أعمال الأسقف",
+        description: "تركيب وإصلاح وصيانة الأسقف.",
+      },
+    ],
   },
   {
-    "name": "Garden & Outdoor",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762124240/sa3tha%20services%20images/1762124235013-Picsart_25-11-02_22-46-14-676.png.png",
-    "description": "Services to make your outdoor space beautiful and healthy.",
-    "subservices": [
+    name: "الحدائق والمساحات الخارجية",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762124240/sa3tha%20services%20images/1762124235013-Picsart_25-11-02_22-46-14-676.png.png",
+    description: "خدمات لجعل مساحتك الخارجية جميلة وصحية.",
+    subservices: [
       {
-        "name": "Gardening",
-        "description": "Planting, weeding, and general garden maintenance."
+        name: "البستنة",
+        description: "الزراعة وإزالة الأعشاب والصيانة العامة للحديقة.",
       },
       {
-        "name": "Landscaping",
-        "description": "Designing and creating beautiful outdoor spaces."
+        name: "تنسيق الحدائق",
+        description: "تصميم وإنشاء مساحات خارجية جميلة.",
       },
       {
-        "name": "Tree Trimming",
-        "description": "Safely pruning and trimming trees for health and aesthetics."
+        name: "تقليم الأشجار",
+        description:
+          "تقليم وقص الأشجار بأمان للصحة والجمال.",
       },
       {
-        "name": "Lawn Care",
-        "description": "Mowing, fertilizing, and maintaining a healthy lawn."
-      }
-    ]
+        name: "العناية بالمسطحات الخضراء",
+        description: "القص والتسميد والحفاظ على مسطح أخضر صحي.",
+      },
+    ],
   },
   {
-    "name": "Tech Services",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762124294/sa3tha%20services%20images/1762124289097-Picsart_25-11-02_22-45-19-194.png.png",
-    "description": "Installation and repair for your technology needs.",
-    "subservices": [
+    name: "الخدمات التقنية",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762124294/sa3tha%20services%20images/1762124289097-Picsart_25-11-02_22-45-19-194.png.png",
+    description: "التركيب والإصلاح لاحتياجاتك التقنية.",
+    subservices: [
       {
-        "name": "Computer Repair",
-        "description": "Diagnosing and fixing hardware and software issues."
+        name: "إصلاح الكمبيوتر",
+        description: "تشخيص وإصلاح مشاكل الأجهزة والبرامج.",
       },
       {
-        "name": "Network Setup",
-        "description": "Installing and configuring home or office Wi-Fi networks."
+        name: "إعداد الشبكات",
+        description:
+          "تركيب وتكوين شبكات الواي فاي المنزلية أو المكتبية.",
       },
       {
-        "name": "Smart Home Installation",
-        "description": "Setting up smart lights, speakers, and security systems."
+        name: "تركيب المنزل الذكي",
+        description: "إعداد الإضاءة الذكية ومكبرات الصوت وأنظمة الأمان.",
       },
       {
-        "name": "CCTV Installation",
-        "description": "Installing security cameras for home or business surveillance."
-      }
-    ]
+        name: "تركيب كاميرات المراقبة",
+        description:
+          "تركيب كاميرات الأمان لمراقبة المنزل أو العمل.",
+      },
+    ],
   },
   {
-    "name": "Moving & Transport",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762124385/sa3tha%20services%20images/1762124380933-Picsart_25-11-02_22-43-35-135.png.png",
-    "description": "Helping you move your belongings safely and efficiently.",
-    "subservices": [
+    name: "النقل والشحن",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762124385/sa3tha%20services%20images/1762124380933-Picsart_25-11-02_22-43-35-135.png.png",
+    description: "مساعدتك في نقل ممتلكاتك بأمان وكفاءة.",
+    subservices: [
       {
-        "name": "Furniture Moving",
-        "description": "Safely moving heavy furniture and items."
+        name: "نقل الأثاث",
+        description: "نقل الأثاث والأغراض الثقيلة بأمان.",
       },
       {
-        "name": "Packing Services",
-        "description": "Securely packing your belongings for a move."
+        name: "خدمات التعبئة",
+        description: "تعبئة ممتلكاتك بشكل آمن للنقل.",
       },
       {
-        "name": "Storage",
-        "description": "Providing short-term or long-term storage solutions."
-      }
-    ]
+        name: "التخزين",
+        description: "توفير حلول تخزين قصيرة أو طويلة الأجل.",
+      },
+    ],
   },
   {
-    "name": "Other Services",
-    "icon": "https://res.cloudinary.com/dpmsou908/image/upload/v1762125181/sa3tha%20services%20images/1762125174791-Gemini_Generated_Image_fvntx1fvntx1fvnt.png.png",
-    "description": "A variety of specialized services for your home or business.",
-    "subservices": [
+    name: "خدمات أخرى",
+    icon: "https://res.cloudinary.com/dpmsou908/image/upload/v1762125181/sa3tha%20services%20images/1762125174791-Gemini_Generated_Image_fvntx1fvntx1fvnt.png.png",
+    description: "مجموعة متنوعة من الخدمات المتخصصة لمنزلك أو عملك.",
+    subservices: [
       {
-        "name": "Pest Control",
-        "description": "Exterminating and preventing pests like insects and rodents."
+        name: "مكافحة الحشرات",
+        description:
+          "إبادة ومنع الآفات مثل الحشرات والقوارض.",
       },
       {
-        "name": "Water Tank Cleaning",
-        "description": "Hygienic cleaning and disinfection of water storage tanks."
+        name: "تنظيف خزانات المياه",
+        description:
+          "تنظيف وتعقيم صحي لخزانات تخزين المياه.",
       },
       {
-        "name": "Satellite Installation",
-        "description": "Setting up and aligning satellite dishes for TV."
+        name: "تركيب الأقمار الصناعية",
+        description: "إعداد ومحاذاة أطباق الأقمار الصناعية للتلفزيون.",
       },
       {
-        "name": "Interior Design",
-        "description": "Planning and designing the interior spaces of your home."
-      }
-    ]
-  }
+        name: "التصميم الداخلي",
+        description: "تخطيط وتصميم المساحات الداخلية لمنزلك.",
+      },
+    ],
+  },
 ];
 
 const seedDatabase = async () => {
@@ -248,7 +263,7 @@ const seedDatabase = async () => {
       }
 
       console.log(
-        `Seeded service: ${service.name} with ${subServicesToCreate.length} subservices.`
+        `Seeded service: ${service.name} with ${subServicesToCreate.length} subservices.`,
       );
     }
 
@@ -263,4 +278,3 @@ const seedDatabase = async () => {
 
 // Run the seeder
 seedDatabase();
-

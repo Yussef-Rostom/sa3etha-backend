@@ -6,16 +6,30 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
     phone: {
       type: String,
       required: true,
       unique: true,
+      validate: {
+        validator: function (v) {
+          return /^(?:\+20|0)?1[0-2,5]{1}[0-9]{8}$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid Egyptian phone number!`,
+      },
     },
     email: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      validate: {
+        validator: function (v) {
+          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid email!`,
+      },
     },
     imageUrl: {
       type: String,
@@ -32,16 +46,15 @@ const userSchema = new mongoose.Schema(
     },
     fcmToken: {
       type: String,
+      select: false,
     },
     location: {
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
       },
       coordinates: {
         type: [Number],
-        default: [0, 0],
       },
       governorate: String,
     },
@@ -72,17 +85,32 @@ const userSchema = new mongoose.Schema(
     },
     refreshToken: {
       type: String,
+      select: false,
     },
     otp: {
-      type: String,
+      type: Number,
+      select: false,
     },
     otpExpires: {
       type: Date,
+      select: false,
     },
+    lastSearch: {
+      service: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Service",
+      },
+      subService: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SubService",
+      },
+      timestamp: Date,
+    },
+    lastSuggestionSentAt: Date,
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.index({ location: "2dsphere" });

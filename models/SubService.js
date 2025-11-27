@@ -18,7 +18,7 @@ const subServiceSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const SubService = mongoose.model("SubService", subServiceSchema);

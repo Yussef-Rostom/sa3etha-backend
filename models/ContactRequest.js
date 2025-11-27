@@ -40,15 +40,36 @@ const contactRequestSchema = new mongoose.Schema(
     },
 
     expertResponse: {
-      type: Boolean,
+      type: Boolean, // true = deal, false = no deal
     },
     clientResponse: {
       type: Boolean,
     },
+    
+    // Follow-up System Fields
+    expertCheckSentAt: {
+      type: Date,
+    },
+    expertResponseAt: {
+      type: Date,
+    },
+    dealDate: {
+      type: Date,
+    },
+    customerReviewRequested: {
+      type: Boolean,
+      default: false,
+    },
+    customerConfirmedNoDeal: {
+      type: Boolean,
+    },
+    customerResponseAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 contactRequestSchema.index({ status: 1, createdAt: 1 });

@@ -12,13 +12,13 @@ router.post(
   "/profile-image",
   protect,
   uploadProfileImage.single("image"),
-  uploadImage
+  uploadImage,
 );
 router.post(
   "/service-image",
   protect,
   uploadServiceImage.single("image"),
-  uploadImage
+  uploadImage,
 );
 
 module.exports = router;

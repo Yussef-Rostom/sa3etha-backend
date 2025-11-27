@@ -1,12 +1,17 @@
-const cron = require('node-cron');
-const findOldContactRequests = require('../tasks/findOldContactRequests');
+const cron = require("node-cron");
+const sendExpertSuggestions = require("../tasks/sendExpertSuggestions");
+
+const checkContactFollowups = require("../tasks/checkContactFollowups");
 
 const initScheduledJobs = () => {
-  // Schedule to run every 30 minutes
-  cron.schedule('*/30 * * * *', findOldContactRequests);
 
-  // Schedule other tasks here
-  // cron.schedule('0 * * * *', someOtherTask);
+  // Schedule expert suggestions to run every hour
+  cron.schedule("0 * * * *", sendExpertSuggestions);
+
+  // Schedule contact follow-up checks to run every minute
+  cron.schedule("* * * * *", checkContactFollowups);
+
+  console.log("Scheduled jobs initialized");
 };
 
 module.exports = initScheduledJobs;

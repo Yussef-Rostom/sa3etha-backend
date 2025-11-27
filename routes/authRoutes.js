@@ -7,28 +7,33 @@ const {
   logoutUser,
   getMe,
   updateUser,
-  requestEmailUpdate,
-  updateEmail,
   updateFcmToken,
   forgotPassword,
   resetPassword,
+  disableSuggestions,
 } = require("../controllers/authController");
 const {
   validateRegistration,
   validateLogin,
-} = require("../middlewares/validation");
+  validateUpdateUser,
+  validateResetPassword,
+  validateForgotPassword,
+  validateUpdateFcmToken,
+  validateRefreshToken,
+} = require("../middlewares/authValidation");
 const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 router.post("/register", validateRegistration, registerUser);
 router.post("/login", validateLogin, loginUser);
-router.post("/refresh-token", refreshToken);
-router.post("/logout", logoutUser);
+router.post("/refresh-token", validateRefreshToken, refreshToken);
+router.post("/logout", validateRefreshToken, logoutUser);
 router.get("/me", protect, getMe);
-router.put("/me", protect, updateUser);
-router.put("/fcm-token", protect, updateFcmToken);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.put("/me", protect, validateUpdateUser, updateUser);
+router.put("/fcm-token", protect, validateUpdateFcmToken, updateFcmToken);
+router.post("/forgot-password", validateForgotPassword, forgotPassword);
+router.post("/reset-password", validateResetPassword, resetPassword);
+router.post("/disable-suggestions", protect, disableSuggestions);
 
 module.exports = router;

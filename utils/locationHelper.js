@@ -3,6 +3,24 @@ const path = require("path");
 
 const geojsonPath = path.join(__dirname, "..", "gadm41_EGY_1.json");
 const geojson = JSON.parse(fs.readFileSync(geojsonPath, "utf8"));
+const arabicNameMapping = {
+  AlJizah: "الجيزة",
+  AlMinya: "المنيا",
+  AlQahirah: "القاهرة",
+  AlUqsur: "الأقصر",
+  Asyut: "أسيوط",
+  Dumyat: "دمياط",
+  Suhaj: "سوهاج",
+};
+
+const governorateNames = geojson.features.map((feature) => {
+  const nlName = feature.properties.NL_NAME_1;
+  const name = feature.properties.NAME_1;
+  if (nlName === "NA" || !nlName) {
+    return arabicNameMapping[name] || name;
+  }
+  return nlName;
+});
 
 function pointInPolygon(point, polygon) {
   let x = point[0],
@@ -26,16 +44,26 @@ function getGovernorate(lon, lat) {
     if (geometry.type === "MultiPolygon") {
       for (const polygon of geometry.coordinates) {
         if (pointInPolygon([lon, lat], polygon[0])) {
-          return feature.properties.NAME_1;
+          const nlName = feature.properties.NL_NAME_1;
+          const name = feature.properties.NAME_1;
+          if (nlName === "NA" || !nlName) {
+            return arabicNameMapping[name] || name;
+          }
+          return nlName;
         }
       }
     } else if (geometry.type === "Polygon") {
       if (pointInPolygon([lon, lat], geometry.coordinates[0])) {
-        return feature.properties.NAME_1;
+        const nlName = feature.properties.NL_NAME_1;
+        const name = feature.properties.NAME_1;
+        if (nlName === "NA" || !nlName) {
+          return arabicNameMapping[name] || name;
+        }
+        return nlName;
       }
     }
   }
   return null;
 }
 
-module.exports = { getGovernorate };
+module.exports = { getGovernorate, governorateNames };

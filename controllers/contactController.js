@@ -3,51 +3,194 @@ const ContactRequest = require("../models/ContactRequest");
 
 // Get expert contact and create contact request
 const getExpertContact = async (req, res) => {
-  const { serviceId, lat, long } = req.query;
+  const { subServiceId, lat, long } = req.query;
   const customerId = req.user.id;
   const expertId = req.params.expertId;
 
   try {
-    // 1. Get expert contact information
-    const expert = await User.findById(expertId).select("name phone email");
-
-    if (!expert || expert.role !== "expert") {
+    const expert = await User.findById(expertId).select("name phone email role");
+    
+    if (!expert) {
       return res.status(404).json({ message: "Expert not found" });
     }
 
-    // 2. Create contact request
-    let location = undefined;
-    if (lat && long) {
-      const latitude = parseFloat(lat);
-      const longitude = parseFloat(long);
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        location = {
-          type: "Point",
-          coordinates: [longitude, latitude],
-        };
-      }
+    if (expert.role !== "expert") {
+      return res.status(400).json({ message: "User is not an expert" });
     }
 
-    const contactRequest = new ContactRequest({
+    const location = parseLocation(lat, long);
+
+    const contactRequest = await ContactRequest.create({
       customer: customerId,
       expert: expertId,
-      service: serviceId,
+      subService: subServiceId,
       location,
     });
 
-    await contactRequest.save();
+    // Disable suggestions after user creates a contact request
+    try {
+      await User.findByIdAndUpdate(customerId, {
+        lastSearch: null,
+      });
+    } catch (updateError) {
+      // Log error but don't fail the request
+      console.error("Error disabling suggestions:", updateError);
+    }
 
-    res.status(200).json({
-      message:
-        "Expert contact retrieved and contact request created successfully",
-      expert: expert,
-      contactRequest: contactRequest,
+    return res.status(200).json({
+      message: "Expert contact retrieved and contact request created successfully",
+      expert: {
+        id: expert._id,
+        name: expert.name,
+        phone: expert.phone,
+        email: expert.email,
+      },
+      contactRequest: {
+        id: contactRequest._id,
+        subService: contactRequest.subService,
+        location: contactRequest.location,
+        createdAt: contactRequest.createdAt,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error: " + error.message, error });
+    console.error("Error in getExpertContact:", error);
+    return res.status(500).json({ 
+      message: "Server error", 
+      error: error.message 
+    });
+  }
+};
+
+// Helper function to parse location coordinates
+const parseLocation = (lat, long) => {
+  if (!lat || !long) {
+    return undefined;
+  }
+
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(long);
+
+  if (isNaN(latitude) || isNaN(longitude)) {
+    return undefined;
+  }
+
+  // Validate coordinate ranges
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return undefined;
+  }
+
+  return {
+    type: "Point",
+    coordinates: [longitude, latitude],
+  };
+};
+
+// Handle Expert Response (Deal / No Deal)
+const handleExpertResponse = async (req, res) => {
+  const { id } = req.params;
+  const { hasDeal } = req.body; // boolean
+  const expertId = req.user.id;
+
+  try {
+    const contact = await ContactRequest.findById(id).populate("customer", "fcmToken name");
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact request not found" });
+    }
+
+    if (contact.expert.toString() !== expertId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    contact.expertResponse = hasDeal;
+    contact.expertResponseAt = new Date();
+    await contact.save();
+
+    // Notify Customer
+    if (contact.customer && contact.customer.fcmToken) {
+      let title, body, data;
+
+      if (hasDeal) {
+        title = "تأكيد الاتفاق ✅";
+        body = "أكد الخبير الاتفاق. متى موعد التنفيذ؟";
+        data = {
+          type: "customer_followup",
+          contactId: contact._id.toString(),
+          action: "provide_date",
+        };
+      } else {
+        title = "متابعة الطلب ❓";
+        body = "أفاد الخبير بعدم الاتفاق. هل هذا صحيح؟";
+        data = {
+          type: "customer_followup",
+          contactId: contact._id.toString(),
+          action: "confirm_no_deal",
+        };
+      }
+
+      await require("../utils/sendNotification").sendNotification(
+        contact.customer.fcmToken,
+        title,
+        body,
+        null,
+        data,
+        contact.customer._id
+      );
+    }
+
+    return res.status(200).json({ message: "Response recorded successfully" });
+  } catch (error) {
+    console.error("Error in handleExpertResponse:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Handle Customer Response
+const handleCustomerResponse = async (req, res) => {
+  const { id } = req.params;
+  const { dealDate, confirmNoDeal } = req.body;
+  const customerId = req.user.id;
+
+  try {
+    const contact = await ContactRequest.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact request not found" });
+    }
+
+    if (contact.customer.toString() !== customerId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    contact.customerResponseAt = new Date();
+
+    if (dealDate) {
+      contact.dealDate = new Date(dealDate);
+      contact.status = "confirmed";
+      await contact.save();
+      return res.status(200).json({ message: "Deal date confirmed" });
+    } else if (confirmNoDeal) {
+      contact.customerConfirmedNoDeal = true;
+      contact.status = "denied"; // Or another status indicating failed deal
+      await contact.save();
+
+      // Trigger suggestions (Simplified: just return message for now, cron handles suggestions)
+      // Ideally, we could call sendExpertSuggestions logic here specifically for this user
+      
+      return res.status(200).json({ 
+        message: "No deal confirmed. We will send you new suggestions shortly." 
+      });
+    }
+
+    return res.status(400).json({ message: "Invalid response data" });
+  } catch (error) {
+    console.error("Error in handleCustomerResponse:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 module.exports = {
   getExpertContact,
+  handleExpertResponse,
+  handleCustomerResponse,
 };

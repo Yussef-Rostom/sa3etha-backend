@@ -41,8 +41,8 @@ const removeAllUsers = async () => {
 const run = async () => {
   await connectToDatabase();
 
-  // await getAllUsers();
-  await removeAllUsers();
+  await getAllUsers();
+  // await removeAllUsers();
 };
 
 run();
