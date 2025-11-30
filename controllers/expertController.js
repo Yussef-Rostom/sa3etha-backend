@@ -12,7 +12,7 @@ const getAvailableExperts = async (req, res) => {
     })
       .select("-password -phone -email -fcmToken -refreshToken -otp -otpExpires")
       .populate({
-        path: "expertProfile.serviceTypes",
+        path: "expertProfile.serviceTypes.subServiceId",
         model: "SubService",
         populate: {
           path: "service",
@@ -92,7 +92,7 @@ const getNearExperts = async (req, res) => {
     };
 
     if (subServiceId) {
-      matchQuery["expertProfile.serviceTypes"] = new mongoose.Types.ObjectId(
+      matchQuery["expertProfile.serviceTypes.subServiceId"] = new mongoose.Types.ObjectId(
         subServiceId,
       );
     } else if (serviceId) {
@@ -100,7 +100,7 @@ const getNearExperts = async (req, res) => {
         "_id",
       );
       const subServiceIds = subServices.map((s) => s._id);
-      matchQuery["expertProfile.serviceTypes"] = { $in: subServiceIds };
+      matchQuery["expertProfile.serviceTypes.subServiceId"] = { $in: subServiceIds };
     }
 
     pipeline.push({ $match: matchQuery });
@@ -118,7 +118,7 @@ const getNearExperts = async (req, res) => {
 
     const experts = await User.aggregate(pipeline);
     await User.populate(experts, {
-      path: "expertProfile.serviceTypes",
+      path: "expertProfile.serviceTypes.subServiceId",
       model: "SubService",
       populate: {
         path: "service",
@@ -226,15 +226,9 @@ const updateExpertProfile = async (req, res) => {
       const {
         serviceTypes,
         description,
-        averagePricePerHour,
-        yearsExperience,
       } = expertProfileUpdates;
       if (serviceTypes) expert.expertProfile.serviceTypes = serviceTypes;
       if (description) expert.expertProfile.description = description;
-      if (averagePricePerHour)
-        expert.expertProfile.averagePricePerHour = averagePricePerHour;
-      if (yearsExperience)
-        expert.expertProfile.yearsExperience = yearsExperience;
     }
 
     await expert.save();
@@ -283,8 +277,12 @@ const addSubServiceToProfile = async (req, res) => {
       return res.status(404).json({ message: "Sub-service not found" });
     }
 
-    if (!expert.expertProfile.serviceTypes.includes(subServiceId)) {
-      expert.expertProfile.serviceTypes.push(subServiceId);
+    const existingService = expert.expertProfile.serviceTypes.find(
+      (s) => s.subServiceId.toString() === subServiceId
+    );
+
+    if (!existingService) {
+      expert.expertProfile.serviceTypes.push({ subServiceId });
       await expert.save();
     }
 
@@ -307,7 +305,7 @@ const removeSubServiceFromProfile = async (req, res) => {
     }
 
     expert.expertProfile.serviceTypes = expert.expertProfile.serviceTypes.filter(
-      (id) => id.toString() !== subServiceId,
+      (s) => s.subServiceId.toString() !== subServiceId,
     );
     await expert.save();
 
@@ -322,18 +320,26 @@ const removeSubServiceFromProfile = async (req, res) => {
 
 const updateExpertStats = async (req, res) => {
   try {
-    const { averagePricePerHour, yearsExperience } = req.body;
+    const { subServiceId, averagePricePerHour, yearsExperience } = req.body;
     const expert = await User.findById(req.user.id);
 
     if (!expert || expert.role !== "expert") {
       return res.status(404).json({ message: "Expert not found" });
     }
 
+    const serviceIndex = expert.expertProfile.serviceTypes.findIndex(
+      (s) => s.subServiceId.toString() === subServiceId
+    );
+
+    if (serviceIndex === -1) {
+      return res.status(404).json({ message: "Sub-service not found in expert profile" });
+    }
+
     if (averagePricePerHour !== undefined) {
-      expert.expertProfile.averagePricePerHour = averagePricePerHour;
+      expert.expertProfile.serviceTypes[serviceIndex].averagePricePerHour = averagePricePerHour;
     }
     if (yearsExperience !== undefined) {
-      expert.expertProfile.yearsExperience = yearsExperience;
+      expert.expertProfile.serviceTypes[serviceIndex].yearsExperience = yearsExperience;
     }
 
     await expert.save();

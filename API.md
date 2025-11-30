@@ -315,7 +315,10 @@ This document outlines all the API endpoints for the application.
 - **Validation:**
   - None (public endpoint)
 - **Response:**
-  - Array of expert objects with populated service types
+  - Array of expert objects with populated service types. Each service type object contains:
+    - `subServiceId`: Populated sub-service details.
+    - `averagePricePerHour`: Price for this specific service.
+    - `yearsExperience`: Experience for this specific service.
 - **Error Responses:**
   - `500 Internal Server Error`: Server error
 
@@ -339,7 +342,10 @@ This document outlines all the API endpoints for the application.
   - Governorate must be from the valid list (if provided)
   - Range must be a positive integer (if provided)
 - **Response:**
-  - Array of nearby expert objects with populated service types
+  - Array of nearby expert objects with populated service types. Each service type object contains:
+    - `subServiceId`: Populated sub-service details.
+    - `averagePricePerHour`: Price for this specific service.
+    - `yearsExperience`: Experience for this specific service.
 - **Error Responses:**
   - `400 Bad Request`: Validation errors, invalid coordinates or governorate
   - `500 Internal Server Error`: Server error
@@ -451,11 +457,13 @@ This document outlines all the API endpoints for the application.
 - **Headers:**
   - `Authorization`: `Bearer <access_token>`
 - **Body:**
-  - `averagePricePerHour` (Number, optional): The expert's average price per hour.
-  - `yearsExperience` (Number, optional): The expert's years of experience.
+  - `subServiceId` (String, required): The ID of the sub-service to update stats for.
+  - `averagePricePerHour` (Number, optional): The expert's average price per hour for this service.
+  - `yearsExperience` (Number, optional): The expert's years of experience for this service.
 - **Validation:**
   - Valid access token required
   - User must have role "expert"
+  - Sub-service ID is required and must be a valid MongoDB ObjectId
   - Average price per hour must be a number (if provided)
   - Years of experience must be a number (if provided)
 - **Response:**

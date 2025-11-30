@@ -70,8 +70,18 @@ const userSchema = new mongoose.Schema(
     expertProfile: {
       serviceTypes: [
         {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "SubService",
+          subServiceId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "SubService",
+          },
+          averagePricePerHour: {
+            type: Number,
+            default: 0,
+          },
+          yearsExperience: {
+            type: Number,
+            default: 0,
+          },
         },
       ],
       description: String,
@@ -79,15 +89,7 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: true,
       },
-      averagePricePerHour: {
-        type: Number,
-        default: 0,
-      },
       averageRating: {
-        type: Number,
-        default: 0,
-      },
-      yearsExperience: {
         type: Number,
         default: 0,
       },

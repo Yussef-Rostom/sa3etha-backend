@@ -160,6 +160,9 @@ const validateSubServiceOperation = [
 ];
 
 const validateUpdateExpertStats = [
+  check("subServiceId", "Sub-service ID is required and must be a valid ID")
+    .notEmpty()
+    .isMongoId(),
   check("averagePricePerHour")
     .optional()
     .isNumeric()
