@@ -8,8 +8,8 @@ const getExpertContact = async (req, res) => {
   const expertId = req.params.expertId;
 
   try {
-    const expert = await User.findById(expertId).select("name phone email role");
-    
+    const expert = await User.findById(expertId).select("name phone whatsapp email role");
+
     if (!expert) {
       return res.status(404).json({ message: "Expert not found" });
     }
@@ -23,7 +23,7 @@ const getExpertContact = async (req, res) => {
     const contactRequest = await ContactRequest.create({
       customer: customerId,
       expert: expertId,
-      subService: subServiceId,
+      service: subServiceId,
       location,
     });
 
@@ -44,19 +44,24 @@ const getExpertContact = async (req, res) => {
         name: expert.name,
         phone: expert.phone,
         email: expert.email,
+        whatsappLink: expert.whatsapp
+          ? `https://wa.me/${expert.whatsapp.replace("+", "")}?text=${encodeURIComponent(
+            "مرحباً، لقد وجدتك على تطبيق ساعتها وأرغب في التواصل معك بخصوص خدمتك.",
+          )}`
+          : null,
       },
       contactRequest: {
         id: contactRequest._id,
-        subService: contactRequest.subService,
+        subService: contactRequest.service,
         location: contactRequest.location,
         createdAt: contactRequest.createdAt,
       },
     });
   } catch (error) {
     console.error("Error in getExpertContact:", error);
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: error.message 
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message
     });
   }
 };
@@ -176,9 +181,9 @@ const handleCustomerResponse = async (req, res) => {
 
       // Trigger suggestions (Simplified: just return message for now, cron handles suggestions)
       // Ideally, we could call sendExpertSuggestions logic here specifically for this user
-      
-      return res.status(200).json({ 
-        message: "No deal confirmed. We will send you new suggestions shortly." 
+
+      return res.status(200).json({
+        message: "No deal confirmed. We will send you new suggestions shortly."
       });
     }
 

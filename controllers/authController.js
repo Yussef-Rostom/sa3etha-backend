@@ -69,6 +69,7 @@ const registerUser = async (req, res) => {
       email,
       password,
       phone,
+      whatsapp: req.body.whatsapp ? formatPhoneNumber(req.body.whatsapp) : phone,
       role,
     });
 
@@ -212,6 +213,9 @@ const updateUser = async (req, res) => {
   try {
     const { name, location, imageUrl } = req.body;
     const phone = req.body.phone ? formatPhoneNumber(req.body.phone) : undefined;
+    const whatsapp = req.body.whatsapp
+      ? formatPhoneNumber(req.body.whatsapp)
+      : undefined;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -227,6 +231,7 @@ const updateUser = async (req, res) => {
       user.phone = phone;
     }
     user.imageUrl = imageUrl || user.imageUrl;
+    if (whatsapp) user.whatsapp = whatsapp;
 
     if (req.body.coordinates) {
       const [lon, lat] = req.body.coordinates;

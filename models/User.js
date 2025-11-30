@@ -19,6 +19,15 @@ const userSchema = new mongoose.Schema(
         message: (props) => `${props.value} is not a valid Egyptian phone number!`,
       },
     },
+    whatsapp: {
+      type: String,
+      validate: {
+        validator: function (v) {
+          return /^(?:\+20|0)?1[0-2,5]{1}[0-9]{8}$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid Egyptian phone number!`,
+      },
+    },
     email: {
       type: String,
       required: true,

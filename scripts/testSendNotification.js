@@ -11,17 +11,17 @@ const testNotification = async () => {
 
     // Find a user to send notification to
     // You might want to change this to a specific user ID or email for your testing
-    const user = await User.findOne();
+    // const user = await User.findOne();
 
-    if (!user) {
-      console.log("No users found to test notification.");
-      process.exit(1);
-    }
+    // if (!user) {
+    //   console.log("No users found to test notification.");
+    //   process.exit(1);
+    // }
 
-    console.log(`Sending notification to user: ${user.email} (${user._id})`);
+    // console.log(`Sending notification to user: ${user.email} (${user._id})`);
 
     // Only attempt to send FCM if the user has a token, but always try to save to DB
-    const fcmToken = user.fcmToken; 
+    // const fcmToken = user.fcmToken; 
     
     // await sendNotification(
     //   fcmToken,
@@ -33,8 +33,8 @@ const testNotification = async () => {
     // );
 
 
-    const token = "fd3Z-mPHMbqMC3H0F__Ym9:APA91bGO32QFIlL8-Kov3HRGOGsGgZd43eT0jzC2elP6SyXpludvWw_XszO1R5KutXTFyAYIbBQONWwM5EjpLWAMTbdPEXFEFQE91XKPnXHkaQ3Zbnx5E28";
-    await sendNotification(token);
+    const token = "ceYROMA5dXNhzCZRV8PU01:APA91bHqX33YVrtvMFFvR8Z4xoMXd8hcSbW3t42w3A8nbV_p7DwskAVqejqu9cSMqckpNC7YEioVrx6lwO2yl1FI7NsYaWyuGQ3P56St-Ojo3m2yc99iplc";
+    await sendNotification(token, "ازيك ي بسمله", "عايز اقولك انك جامد يصاحبي");
 
     console.log("Notification test completed.");
   } catch (error) {

@@ -5,6 +5,9 @@ const {
   updateExpertProfile,
   getNearExperts,
   getExpertProfileById,
+  addSubServiceToProfile,
+  removeSubServiceFromProfile,
+  updateExpertStats,
 } = require("../controllers/expertController");
 const { protect, optionalAuth } = require("../middlewares/authMiddleware");
 const { expert } = require("../middlewares/expertMiddleware");
@@ -13,6 +16,8 @@ const {
   validateUpdateExpertProfile,
   validateUpdateAvailability,
   validateGetExpertProfileById,
+  validateSubServiceOperation,
+  validateUpdateExpertStats,
 } = require("../middlewares/expertsValidation");
 
 const router = express.Router();
@@ -38,6 +43,30 @@ router.put(
   expert,
   validateUpdateExpertProfile,
   updateExpertProfile,
+);
+
+router.post(
+  "/sub-services/:subServiceId",
+  protect,
+  expert,
+  validateSubServiceOperation,
+  addSubServiceToProfile,
+);
+
+router.delete(
+  "/sub-services/:subServiceId",
+  protect,
+  expert,
+  validateSubServiceOperation,
+  removeSubServiceFromProfile,
+);
+
+router.put(
+  "/stats",
+  protect,
+  expert,
+  validateUpdateExpertStats,
+  updateExpertStats,
 );
 
 module.exports = router;

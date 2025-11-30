@@ -19,7 +19,7 @@ const getAvailableExperts = async (req, res) => {
           model: "Service",
         },
       });
-    
+
     res.status(200).json({ experts });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
@@ -30,10 +30,10 @@ const getAvailableExperts = async (req, res) => {
 const getNearExperts = async (req, res) => {
   try {
     const { serviceId, subServiceId, coordinates, governorate, range } = req.query;
-    
+
     let searchCoordinates;
     let searchGovernorate = governorate;
-    
+
     // If coordinates are provided in query, use them
     if (coordinates && Array.isArray(coordinates) && coordinates.length === 2) {
       const [long, lat] = coordinates.map(parseFloat);
@@ -41,7 +41,7 @@ const getNearExperts = async (req, res) => {
         searchCoordinates = [long, lat];
       }
     }
-    
+
     // If no coordinates/governorate provided and user is authenticated, try to use user's location
     if (!searchCoordinates && !searchGovernorate && req.user) {
       try {
@@ -269,10 +269,91 @@ const getExpertProfileById = async (req, res) => {
   }
 };
 
+const addSubServiceToProfile = async (req, res) => {
+  try {
+    const { subServiceId } = req.params;
+    const expert = await User.findById(req.user.id);
+
+    if (!expert || expert.role !== "expert") {
+      return res.status(404).json({ message: "Expert not found" });
+    }
+
+    const subService = await SubService.findById(subServiceId);
+    if (!subService) {
+      return res.status(404).json({ message: "Sub-service not found" });
+    }
+
+    if (!expert.expertProfile.serviceTypes.includes(subServiceId)) {
+      expert.expertProfile.serviceTypes.push(subServiceId);
+      await expert.save();
+    }
+
+    res.status(200).json({
+      message: "Sub-service added successfully",
+      serviceTypes: expert.expertProfile.serviceTypes,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error: " + error.message, error });
+  }
+};
+
+const removeSubServiceFromProfile = async (req, res) => {
+  try {
+    const { subServiceId } = req.params;
+    const expert = await User.findById(req.user.id);
+
+    if (!expert || expert.role !== "expert") {
+      return res.status(404).json({ message: "Expert not found" });
+    }
+
+    expert.expertProfile.serviceTypes = expert.expertProfile.serviceTypes.filter(
+      (id) => id.toString() !== subServiceId,
+    );
+    await expert.save();
+
+    res.status(200).json({
+      message: "Sub-service removed successfully",
+      serviceTypes: expert.expertProfile.serviceTypes,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error: " + error.message, error });
+  }
+};
+
+const updateExpertStats = async (req, res) => {
+  try {
+    const { averagePricePerHour, yearsExperience } = req.body;
+    const expert = await User.findById(req.user.id);
+
+    if (!expert || expert.role !== "expert") {
+      return res.status(404).json({ message: "Expert not found" });
+    }
+
+    if (averagePricePerHour !== undefined) {
+      expert.expertProfile.averagePricePerHour = averagePricePerHour;
+    }
+    if (yearsExperience !== undefined) {
+      expert.expertProfile.yearsExperience = yearsExperience;
+    }
+
+    await expert.save();
+
+    res.status(200).json({
+      message: "Expert stats updated successfully",
+      expertProfile: expert.expertProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error: " + error.message, error });
+  }
+};
+
 module.exports = {
   getAvailableExperts,
   updateAvailability,
   updateExpertProfile,
   getNearExperts,
   getExpertProfileById,
+  addSubServiceToProfile,
+  removeSubServiceFromProfile,
+  updateExpertStats,
 };

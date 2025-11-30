@@ -129,6 +129,7 @@ This document outlines all the API endpoints for the application.
   - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
   - `imageUrl` (String, optional): The user's new image URL.
+  - `whatsapp` (String, optional): The user's WhatsApp number. Will be automatically converted to +20 format.
 - **Validation:**
   - Valid access token required
   - Name must contain only Arabic characters and spaces (if provided)
@@ -136,6 +137,7 @@ This document outlines all the API endpoints for the application.
   - Governorate must be from the valid list (if provided)
   - Coordinates must be an array of exactly 2 numbers (if provided)
   - Image URL must be a string (if provided)
+  - Whatsapp must match Egyptian phone number format (if provided)
 - **Response:**
   - `message` (String): Success message.
   - `user` (Object): The updated user's profile.
@@ -247,6 +249,7 @@ This document outlines all the API endpoints for the application.
     - `name` (String): The expert's name.
     - `phone` (String): The expert's phone number.
     - `email` (String): The expert's email address.
+    - `whatsappLink` (String): Link to open WhatsApp chat with the expert.
   - `contactRequest` (Object): The created contact request details.
     - `id` (String): The contact request ID.
     - `subService` (String): The sub-service ID.
@@ -365,35 +368,6 @@ This document outlines all the API endpoints for the application.
   - `404 Not Found`: Expert not found
   - `500 Internal Server Error`: Server error
 
-### 4. Update expert profile
-
-- **URL:** `/api/experts/profile`
-- **Method:** `PUT`
-- **Description:** Updates the profile of an expert.
-- **Headers:**
-  - `Authorization`: `Bearer <access_token>`
-- **Body:**
-  - `name` (String, optional): The expert's new name. Must contain only Arabic characters and spaces.
-  - `phone` (String, optional): The expert's new valid Egyptian phone number. Will be automatically converted to +20 format.
-  - `imageUrl` (String, optional): The expert's new image URL.
-  - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
-  - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
-  - `expertProfile` (Object, optional):
-    - `serviceTypes` (Array, optional): An array of sub-service IDs.
-    - `description` (String, optional): The expert's new description.
-    - `averagePricePerHour` (Number, optional): The expert's new average price per hour.
-    - `yearsExperience` (Number, optional): The expert's new years of experience.
-- **Validation:**
-  - Valid access token required
-  - User must have role "expert"
-  - Name must contain only Arabic characters and spaces (if provided)
-  - Phone must match Egyptian phone number format and not be in use by another user (if provided)
-  - Coordinates must be an array of 2 numbers with valid ranges (if provided)
-  - Governorate must be from the valid list (if provided)
-  - Service types must be valid MongoDB ObjectIds (if provided)
-  - Average price per hour must be a positive number (if provided)
-  - Years of experience must be a non-negative number (if provided)
-- **Response:**
   - `message` (String): Success message.
   - `expert` (Object): Updated expert profile with all fields.
 - **Error Responses:**
@@ -424,6 +398,80 @@ This document outlines all the API endpoints for the application.
   - `500 Internal Server Error`: Server error
 
 ## Service Routes
+
+### 6. Add Sub-Service to Profile
+
+- **URL:** `/api/experts/sub-services/:subServiceId`
+- **Method:** `POST`
+- **Description:** Adds a sub-service to the expert's profile.
+- **Headers:**
+  - `Authorization`: `Bearer <access_token>`
+- **Parameters:**
+  - `subServiceId` (String, required): The ID of the sub-service to add.
+- **Validation:**
+  - Valid access token required
+  - User must have role "expert"
+  - Sub-service ID must be a valid MongoDB ObjectId
+- **Response:**
+  - `message` (String): Success message.
+  - `serviceTypes` (Array): Updated array of sub-service IDs.
+- **Error Responses:**
+  - `400 Bad Request`: Validation errors, invalid sub-service ID
+  - `401 Unauthorized`: Missing or invalid access token
+  - `404 Not Found`: Expert not found or Sub-service not found
+  - `500 Internal Server Error`: Server error
+
+### 7. Remove Sub-Service from Profile
+
+- **URL:** `/api/experts/sub-services/:subServiceId`
+- **Method:** `DELETE`
+- **Description:** Removes a sub-service from the expert's profile.
+- **Headers:**
+  - `Authorization`: `Bearer <access_token>`
+- **Parameters:**
+  - `subServiceId` (String, required): The ID of the sub-service to remove.
+- **Validation:**
+  - Valid access token required
+  - User must have role "expert"
+  - Sub-service ID must be a valid MongoDB ObjectId
+- **Response:**
+  - `message` (String): Success message.
+  - `serviceTypes` (Array): Updated array of sub-service IDs.
+- **Error Responses:**
+  - `400 Bad Request`: Validation errors, invalid sub-service ID
+  - `401 Unauthorized`: Missing or invalid access token
+  - `404 Not Found`: Expert not found
+  - `500 Internal Server Error`: Server error
+
+  - `500 Internal Server Error`: Server error
+
+### 8. Update Expert Stats
+
+- **URL:** `/api/experts/stats`
+- **Method:** `PUT`
+- **Description:** Updates the expert's average price per hour and years of experience.
+- **Headers:**
+  - `Authorization`: `Bearer <access_token>`
+- **Body:**
+  - `averagePricePerHour` (Number, optional): The expert's average price per hour.
+  - `yearsExperience` (Number, optional): The expert's years of experience.
+- **Validation:**
+  - Valid access token required
+  - User must have role "expert"
+  - Average price per hour must be a number (if provided)
+  - Years of experience must be a number (if provided)
+- **Response:**
+  - `message` (String): Success message.
+  - `expertProfile` (Object): Updated expert profile.
+- **Error Responses:**
+  - `400 Bad Request`: Validation errors
+  - `401 Unauthorized`: Missing or invalid access token
+  - `404 Not Found`: Expert not found
+  - `500 Internal Server Error`: Server error
+
+## Service Routes
+
+
 
 ### 1. Get all services
 
