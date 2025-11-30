@@ -125,7 +125,6 @@ This document outlines all the API endpoints for the application.
   - `Authorization`: `Bearer <access_token>`
 - **Body:**
   - `name` (String, optional): The user's new name. Must contain only Arabic characters and spaces.
-  - `phone` (String, optional): The user's new valid Egyptian phone number. Will be automatically converted to +20 format.
   - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
   - `imageUrl` (String, optional): The user's new image URL.
@@ -133,7 +132,6 @@ This document outlines all the API endpoints for the application.
 - **Validation:**
   - Valid access token required
   - Name must contain only Arabic characters and spaces (if provided)
-  - Phone must match Egyptian phone number format (if provided)
   - Governorate must be from the valid list (if provided)
   - Coordinates must be an array of exactly 2 numbers (if provided)
   - Image URL must be a string (if provided)

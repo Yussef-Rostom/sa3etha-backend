@@ -100,10 +100,6 @@ const validateUpdateUser = [
     .isString()
     .matches(/^[\u0600-\u06FF\s]+$/)
     .withMessage("Name must contain only Arabic characters and spaces"),
-  check("phone", "Please enter a valid Egyptian phone number")
-    .optional()
-    .matches(/^(?:\+20|0)?1[0-2,5]{1}[0-9]{8}$/)
-    .withMessage("Phone must be a valid Egyptian number."),
   check("whatsapp", "Please enter a valid Egyptian phone number")
     .optional()
     .matches(/^(?:\+20|0)?1[0-2,5]{1}[0-9]{8}$/)

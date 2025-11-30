@@ -212,7 +212,6 @@ const getMe = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { name, location, imageUrl } = req.body;
-    const phone = req.body.phone ? formatPhoneNumber(req.body.phone) : undefined;
     const whatsapp = req.body.whatsapp
       ? formatPhoneNumber(req.body.whatsapp)
       : undefined;
@@ -223,13 +222,6 @@ const updateUser = async (req, res) => {
     }
 
     user.name = name || user.name;
-    if (phone && phone !== user.phone) {
-      const existingUser = await User.findOne({ phone });
-      if (existingUser) {
-        return res.status(400).json({ message: "Phone number already in use" });
-      }
-      user.phone = phone;
-    }
     user.imageUrl = imageUrl || user.imageUrl;
     if (whatsapp) user.whatsapp = whatsapp;
 
