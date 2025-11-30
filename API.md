@@ -567,3 +567,17 @@ This document outlines all the API endpoints for the application.
 - **Error Responses:**
   - `401 Unauthorized`: Missing or invalid access token
   - `500 Internal Server Error`: Server error
+
+## Location Routes
+
+### 1. Get all governorates
+
+- **URL:** `/api/location/governorates`
+- **Method:** `GET`
+- **Description:** Retrieves a list of all governorates in Egypt.
+- **Validation:**
+  - None
+- **Response:**
+  - `governorates` (Array): List of governorate names.
+- **Error Responses:**
+  - `500 Internal Server Error`: Server error

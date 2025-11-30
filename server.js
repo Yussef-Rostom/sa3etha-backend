@@ -7,7 +7,9 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const expertRoutes = require("./routes/expertRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+
 const notificationRoutes = require("./routes/notificationRoutes");
+const locationRoutes = require("./routes/locationRoutes");
 const initScheduledJobs = require("./services/scheduledTasks");
 // const bookingRoutes = require('./routes/bookingRoutes');
 
@@ -30,7 +32,9 @@ app.use("/api/contacts", contactRoutes);
 app.use("/api/experts", expertRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/services", serviceRoutes);
+
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/location", locationRoutes);
 // app.use("/api/bookings", bookingRoutes);
 
 app.use((req, res, next) => {
