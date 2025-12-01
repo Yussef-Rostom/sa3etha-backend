@@ -6,7 +6,7 @@ const { getGovernorate } = require("../utils/locationHelper");
 
 const sendExpertSuggestions = async () => {
   console.log("Running cron job to send expert suggestions...");
-  
+
   try {
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -15,7 +15,7 @@ const sendExpertSuggestions = async () => {
     // Find eligible users (users with active lastSearch)
     const eligibleUsers = await User.find({
       "lastSearch.timestamp": { $exists: true, $ne: null, $gte: twentyFourHoursAgo },
-      fcmToken: { $exists: true, $ne: null },
+      // fcmToken check removed to allow saving notifications to DB for users without tokens
       $or: [
         { lastSuggestionSentAt: { $exists: false } },
         { lastSuggestionSentAt: null },
@@ -50,7 +50,7 @@ const sendExpertSuggestions = async () => {
         } else if (user.lastSearch.service) {
           const subServices = await SubService.find({
             service: user.lastSearch.service,
-          }).select("_id"); 
+          }).select("_id");
           const subServiceIds = subServices.map((s) => s._id);
           matchQuery["expertProfile.serviceTypes"] = { $in: subServiceIds };
         }
@@ -104,7 +104,7 @@ const sendExpertSuggestions = async () => {
         // Get service name and image for notification
         let serviceName = "الخدمة المطلوبة";
         let serviceImage = null;
-        
+
         if (user.lastSearch.subService) {
           const subService = await SubService.findById(
             user.lastSearch.subService,

@@ -33,10 +33,10 @@ const testNotification = async () => {
     // );
 
 
-    const token = "ceYROMA5dXNhzCZRV8PU01:APA91bHqX33YVrtvMFFvR8Z4xoMXd8hcSbW3t42w3A8nbV_p7DwskAVqejqu9cSMqckpNC7YEioVrx6lwO2yl1FI7NsYaWyuGQ3P56St-Ojo3m2yc99iplc";
-    await sendNotification(token, "ازيك ي بسمله", "عايز اقولك انك جامد يصاحبي");
+    const token = "enuJS1YhvFGylNJS-uPNnU:APA91bHxK1K7N5DeYsiYqDXnq4-tBoFMorXPyxOkdHL5f-lR_w2ScI9YGOojUWcUc4cU9Q0rKgYvnoj-d_SKdE8MZp01dOaGg4vMDJzK2fzVZrw4eTfkkVQ";
+    await sendNotification(token);
 
-    console.log("Notification test completed.");
+    console.log("Notification test completed.");  
   } catch (error) {
     console.error("Error running test:", error);
   } finally {

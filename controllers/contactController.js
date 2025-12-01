@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const ContactRequest = require("../models/ContactRequest");
+const Notification = require("../models/Notification");
 
 // Get expert contact and create contact request
 const getExpertContact = async (req, res) => {
@@ -97,13 +98,13 @@ const handleExpertResponse = async (req, res) => {
   const expertId = req.user.id;
 
   try {
-    const contact = await ContactRequest.findById(id).populate("customer", "fcmToken name");
+    const contact = await ContactRequest.findById(id).populate("customer", "fcmToken name").populate("expert", "name");
 
     if (!contact) {
       return res.status(404).json({ message: "Contact request not found" });
     }
 
-    if (contact.expert.toString() !== expertId) {
+    if (contact.expert._id.toString() !== expertId) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
@@ -112,12 +113,12 @@ const handleExpertResponse = async (req, res) => {
     await contact.save();
 
     // Notify Customer
-    if (contact.customer && contact.customer.fcmToken) {
+    if (contact.customer) {
       let title, body, data;
 
       if (hasDeal) {
         title = "تأكيد الاتفاق ✅";
-        body = "أكد الخبير الاتفاق. متى موعد التنفيذ؟";
+        body = `أكد الخبير ${contact.expert.name} الاتفاق. متى موعد التنفيذ؟`;
         data = {
           type: "customer_followup",
           contactId: contact._id.toString(),
@@ -125,7 +126,7 @@ const handleExpertResponse = async (req, res) => {
         };
       } else {
         title = "متابعة الطلب ❓";
-        body = "أفاد الخبير بعدم الاتفاق. هل هذا صحيح؟";
+        body = `أفاد الخبير ${contact.expert.name} بعدم الاتفاق. هل هذا صحيح؟`;
         data = {
           type: "customer_followup",
           contactId: contact._id.toString(),
@@ -142,6 +143,13 @@ const handleExpertResponse = async (req, res) => {
         contact.customer._id
       );
     }
+
+    // Delete the expert_followup notification
+    await Notification.deleteOne({
+      recipient: expertId,
+      "data.contactId": contact._id.toString(),
+      "data.type": "expert_followup",
+    });
 
     return res.status(200).json({ message: "Response recorded successfully" });
   } catch (error) {
@@ -173,14 +181,24 @@ const handleCustomerResponse = async (req, res) => {
       contact.dealDate = new Date(dealDate);
       contact.status = "confirmed";
       await contact.save();
+
+      await Notification.deleteOne({
+        recipient: customerId,
+        "data.contactId": contact._id.toString(),
+        "data.type": "customer_followup",
+      });
+
       return res.status(200).json({ message: "Deal date confirmed" });
     } else if (confirmNoDeal) {
       contact.customerConfirmedNoDeal = true;
-      contact.status = "denied"; // Or another status indicating failed deal
+      contact.status = "denied";
       await contact.save();
 
-      // Trigger suggestions (Simplified: just return message for now, cron handles suggestions)
-      // Ideally, we could call sendExpertSuggestions logic here specifically for this user
+      await Notification.deleteOne({
+        recipient: customerId,
+        "data.contactId": contact._id.toString(),
+        "data.type": "customer_followup",
+      });
 
       return res.status(200).json({
         message: "No deal confirmed. We will send you new suggestions shortly."

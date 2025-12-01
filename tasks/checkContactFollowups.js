@@ -15,12 +15,13 @@ const checkContactFollowups = async () => {
       status: "initiated", // Only check initiated contacts
     }).populate("expert", "fcmToken name");
 
+
     console.log(`Found ${contacts.length} contacts needing expert follow-up`);
 
     for (const contact of contacts) {
       try {
-        if (!contact.expert || !contact.expert.fcmToken) {
-          console.log(`Skipping contact ${contact._id}: No expert or FCM token`);
+        if (!contact.expert) {
+          console.log(`Skipping contact ${contact._id}: No expert`);
           continue;
         }
 
