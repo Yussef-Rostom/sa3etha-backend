@@ -16,12 +16,12 @@ const generateTokens = async (user) => {
   const accessToken = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRATION || "15m" },
+    { expiresIn: process.env.JWT_EXPIRATION || "15m" }
   );
   const refreshToken = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRATION || "7d" },
+    { expiresIn: process.env.JWT_REFRESH_EXPIRATION || "7d" }
   );
 
   user.refreshToken = refreshToken;
@@ -69,7 +69,9 @@ const registerUser = async (req, res) => {
       email,
       password,
       phone,
-      whatsapp: req.body.whatsapp ? formatPhoneNumber(req.body.whatsapp) : phone,
+      whatsapp: req.body.whatsapp
+        ? formatPhoneNumber(req.body.whatsapp)
+        : phone,
       role,
     });
 
@@ -102,7 +104,9 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password, role, coordinates, governorate } = req.body;
-    const phone = req.body.phone ? formatPhoneNumber(String(req.body.phone)) : null;
+    const phone = req.body.phone
+      ? formatPhoneNumber(String(req.body.phone))
+      : null;
 
     const query = [];
     if (email) query.push({ email });
@@ -162,14 +166,19 @@ const refreshToken = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(incomingRefreshToken, process.env.JWT_REFRESH_SECRET);
+    const decoded = jwt.verify(
+      incomingRefreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
     const user = await User.findById(decoded.id).select("+refreshToken");
 
     if (!user || user.refreshToken !== incomingRefreshToken) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(user);
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(
+      user
+    );
 
     res.json({ accessToken, refreshToken: newRefreshToken });
   } catch (error) {
@@ -232,7 +241,9 @@ const updateUser = async (req, res) => {
         type: "Point",
         coordinates: req.body.coordinates,
         governorate:
-          req.body.governorate || calculatedGovernorate || user.location.governorate,
+          req.body.governorate ||
+          calculatedGovernorate ||
+          user.location.governorate,
       };
     }
 
@@ -285,7 +296,7 @@ const forgotPassword = async (req, res) => {
     await sendEmail(
       user.email,
       "Password Reset OTP",
-      `Your OTP for password reset is: ${otp}`,
+      `Your OTP for password reset is: ${otp}`
     );
 
     res.status(200).json({ message: "OTP sent to your email" });
@@ -298,13 +309,13 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+otp +otpExpires");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.otp !== otp || user.otpExpires < Date.now()) {
+    if (user.otp != otp || user.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
