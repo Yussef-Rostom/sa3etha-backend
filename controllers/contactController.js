@@ -266,6 +266,13 @@ const reviewExpert = async (req, res) => {
     expert.expertProfile.ratingCount = newCount;
     await expert.save();
 
+    // Delete the review_request notification
+    await Notification.deleteOne({
+      recipient: customerId,
+      "data.contactId": contact._id.toString(),
+      "data.type": "review_request",
+    });
+
     return res.status(201).json({ message: "Review submitted successfully" });
 
   } catch (error) {
