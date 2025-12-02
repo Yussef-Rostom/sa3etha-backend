@@ -277,12 +277,21 @@ const addSubServiceToProfile = async (req, res) => {
       return res.status(404).json({ message: "Sub-service not found" });
     }
 
+    const { averagePricePerHour, yearsExperience } = req.body;
+
     const existingService = expert.expertProfile.serviceTypes.find(
       (s) => s.subServiceId.toString() === subServiceId
     );
 
     if (!existingService) {
-      expert.expertProfile.serviceTypes.push({ subServiceId });
+      const newService = { subServiceId };
+      if (averagePricePerHour !== undefined) {
+        newService.averagePricePerHour = averagePricePerHour;
+      }
+      if (yearsExperience !== undefined) {
+        newService.yearsExperience = yearsExperience;
+      }
+      expert.expertProfile.serviceTypes.push(newService);
       await expert.save();
     }
 

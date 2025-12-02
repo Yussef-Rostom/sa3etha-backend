@@ -443,10 +443,15 @@ This document outlines all the API endpoints for the application.
   - `Authorization`: `Bearer <access_token>`
 - **Parameters:**
   - `subServiceId` (String, required): The ID of the sub-service to add.
+- **Body:**
+  - `averagePricePerHour` (Number, optional): The expert's average price per hour for this service.
+  - `yearsExperience` (Number, optional): The expert's years of experience for this service.
 - **Validation:**
   - Valid access token required
   - User must have role "expert"
   - Sub-service ID must be a valid MongoDB ObjectId
+  - Average price per hour must be a number (if provided)
+  - Years of experience must be a number (if provided)
 - **Response:**
   - `message` (String): Success message.
   - `serviceTypes` (Array): Updated array of sub-service IDs.

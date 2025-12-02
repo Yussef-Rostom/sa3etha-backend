@@ -147,6 +147,14 @@ const validateGetExpertProfileById = [
 
 const validateSubServiceOperation = [
   param("subServiceId", "Invalid sub-service ID").isMongoId(),
+  check("averagePricePerHour")
+    .optional()
+    .isNumeric()
+    .withMessage("Average price per hour must be a number"),
+  check("yearsExperience")
+    .optional()
+    .isNumeric()
+    .withMessage("Years of experience must be a number"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
