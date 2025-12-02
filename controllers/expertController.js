@@ -2,6 +2,7 @@ const User = require("../models/User");
 const SubService = require("../models/SubService");
 const mongoose = require("mongoose");
 const { getGovernorate } = require("../utils/locationHelper");
+const { getGovernorateNameById } = require("../constants/governorates");
 
 // Get all available experts
 const getAvailableExperts = async (req, res) => {
@@ -32,7 +33,7 @@ const getNearExperts = async (req, res) => {
     const { serviceId, subServiceId, coordinates, governorate, range } = req.query;
 
     let searchCoordinates;
-    let searchGovernorate = governorate;
+    let searchGovernorate = getGovernorateNameById(governorate) || governorate;
 
     // If coordinates are provided in query, use them
     if (coordinates && Array.isArray(coordinates) && coordinates.length === 2) {
@@ -217,7 +218,9 @@ const updateExpertProfile = async (req, res) => {
         type: "Point",
         coordinates: req.body.coordinates,
         governorate:
-          req.body.governorate || calculatedGovernorate || expert.location?.governorate,
+          getGovernorateNameById(req.body.governorate) ||
+          calculatedGovernorate ||
+          expert.location?.governorate,
       };
     }
 

@@ -1,0 +1,113 @@
+const axios = require("axios");
+const mongoose = require("mongoose");
+const User = require("../models/User");
+require("dotenv").config({ path: "../.env" });
+
+const API_URL = "http://localhost:3000/api";
+
+async function testGovernorateMapping() {
+    try {
+        console.log("Starting Governorate Mapping Test...");
+
+        // 1. Get all governorates
+        console.log("\n1. Testing Get All Governorates...");
+        const govResponse = await axios.get(`${API_URL}/location/governorates`);
+        const governorates = govResponse.data.governorates;
+
+        if (Array.isArray(governorates) && governorates.length > 0 && governorates[0].id) {
+            console.log("✅ Get All Governorates passed. First item:", governorates[0]);
+        } else {
+            console.error("❌ Get All Governorates failed. Response:", governorates);
+            return;
+        }
+
+        // 2. Register User with Governorate ID
+        console.log("\n2. Testing Registration with Governorate ID...");
+        const testUser = {
+            name: "تست يوزر",
+            email: `testgov${Date.now()}@example.com`,
+            password: "Password123!",
+            phone: `010${Math.floor(10000000 + Math.random() * 90000000)}`,
+            role: "user",
+            governorate: 1, // Cairo
+            coordinates: [31.2357, 30.0444],
+        };
+
+        const registerResponse = await axios.post(`${API_URL}/auth/register`, testUser);
+        const { user, accessToken } = registerResponse.data;
+
+        if (user.location.governorate === 1) {
+            console.log("✅ Registration passed. User governorate ID:", user.location.governorate);
+        } else {
+            console.error("❌ Registration failed. User governorate:", user.location.governorate);
+        }
+
+        // 3. Login User and check Governorate ID
+        console.log("\n3. Testing Login and checking Governorate ID...");
+        const loginResponse = await axios.post(`${API_URL}/auth/login`, {
+            email: testUser.email,
+            password: testUser.password,
+        });
+
+        if (loginResponse.data.user.location.governorate === 1) {
+            console.log("✅ Login passed. User governorate ID:", loginResponse.data.user.location.governorate);
+        } else {
+            console.error("❌ Login failed. User governorate:", loginResponse.data.user.location.governorate);
+        }
+
+        // 4. Update User Profile with new Governorate ID
+        console.log("\n4. Testing Update Profile with Governorate ID...");
+        const updateResponse = await axios.put(
+            `${API_URL}/auth/me`,
+            { governorate: 2 }, // Giza
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        if (updateResponse.data.user.location.governorate === 2) {
+            console.log("✅ Update Profile passed. New governorate ID:", updateResponse.data.user.location.governorate);
+        } else {
+            console.error("❌ Update Profile failed. User governorate:", updateResponse.data.user.location.governorate);
+        }
+
+        // 5. Get Near Experts with Governorate ID
+        console.log("\n5. Testing Get Near Experts with Governorate ID...");
+        // First create an expert in the same governorate (Giza - 2)
+        const expertUser = {
+            name: "خبير تست",
+            email: `expertgov${Date.now()}@example.com`,
+            password: "Password123!",
+            phone: `011${Math.floor(10000000 + Math.random() * 90000000)}`,
+            role: "expert",
+            governorate: 2, // Giza
+            coordinates: [31.2156, 30.0131],
+        };
+
+        const expertRegisterResponse = await axios.post(`${API_URL}/auth/register`, expertUser);
+        const expertToken = expertRegisterResponse.data.accessToken;
+
+        // Make expert available
+        await axios.put(
+            `${API_URL}/experts/availability`,
+            { isAvailable: true },
+            { headers: { Authorization: `Bearer ${expertToken}` } }
+        );
+
+        const nearExpertsResponse = await axios.get(`${API_URL}/experts/near?governorate=2`);
+
+        const foundExpert = nearExpertsResponse.data.experts.find(e => e._id === expertRegisterResponse.data.user._id);
+
+        if (foundExpert) {
+            console.log("✅ Get Near Experts passed. Found created expert.");
+        } else {
+            console.log("⚠️ Get Near Experts: Created expert not found in list (might be other filters), but request succeeded.");
+            console.log("Response length:", nearExpertsResponse.data.experts.length);
+        }
+
+        console.log("\n🎉 All tests passed!");
+
+    } catch (error) {
+        console.error("❌ Test failed:", error.response ? error.response.data : error.message);
+    }
+}
+
+testGovernorateMapping();

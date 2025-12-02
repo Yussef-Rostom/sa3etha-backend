@@ -1,9 +1,9 @@
-const { governorateNames } = require("../utils/locationHelper");
+const { GOVERNORATES } = require("../constants/governorates");
 
 exports.getAllGovernorates = (req, res) => {
     try {
         res.status(200).json({
-            governorates: governorateNames,
+            governorates: GOVERNORATES,
         });
     } catch (error) {
         res.status(500).json({

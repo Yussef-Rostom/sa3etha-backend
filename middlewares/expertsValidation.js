@@ -5,7 +5,9 @@ const {
   param,
 } = require("express-validator");
 const User = require("../models/User");
-const { governorateNames } = require("../utils/locationHelper");
+const { GOVERNORATES } = require("../constants/governorates");
+
+const validGovernorateIds = GOVERNORATES.map((g) => g.id);
 
 const validateUpdateExpertProfile = [
   check("name", "Full name must be a string").optional().isString(),
@@ -49,10 +51,10 @@ const validateUpdateExpertProfile = [
     ),
   check("governorate")
     .optional()
-    .isString()
-    .withMessage("Governorate must be a string")
-    .isIn(governorateNames)
-    .withMessage("Invalid governorate"),
+    .isInt()
+    .withMessage("Governorate must be an integer ID")
+    .isIn(validGovernorateIds)
+    .withMessage("Invalid governorate ID"),
   check("expertProfile.serviceTypes")
     .optional()
     .isArray()
@@ -97,11 +99,11 @@ const validateGetNearExperts = [
     }),
   query(
     "governorate",
-    `Governorate must be one of [${governorateNames.join(", ")}]`,
+    `Governorate must be one of [${validGovernorateIds.join(", ")}]`,
   )
     .optional()
-    .isString()
-    .isIn(governorateNames),
+    .isInt()
+    .isIn(validGovernorateIds),
   query("range", "Range must be a valid positive integer")
     .optional()
     .isInt({ min: 1 }),

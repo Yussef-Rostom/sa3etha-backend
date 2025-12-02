@@ -1,5 +1,8 @@
 const { check, validationResult } = require("express-validator");
-const { governorateNames } = require("../utils/locationHelper");
+
+const { GOVERNORATES } = require("../constants/governorates");
+
+const validGovernorateIds = GOVERNORATES.map((g) => g.id);
 
 const validateRegistration = [
   check("name", "Full name is required")
@@ -24,10 +27,10 @@ const validateRegistration = [
     .withMessage("Role must be one of: user, expert"),
   check("governorate")
     .optional()
-    .isString()
-    .withMessage("Governorate must be a string")
-    .isIn(governorateNames)
-    .withMessage("Invalid governorate"),
+    .isInt()
+    .withMessage("Governorate must be an integer ID")
+    .isIn(validGovernorateIds)
+    .withMessage("Invalid governorate ID"),
   check("coordinates")
     .optional()
     .isArray({ min: 2, max: 2 })
@@ -64,10 +67,10 @@ const validateLogin = [
     .withMessage("Role must be one of: user, expert"),
   check("governorate")
     .optional()
-    .isString()
-    .withMessage("Governorate must be a string")
-    .isIn(governorateNames)
-    .withMessage("Invalid governorate"),
+    .isInt()
+    .withMessage("Governorate must be an integer ID")
+    .isIn(validGovernorateIds)
+    .withMessage("Invalid governorate ID"),
   check("coordinates")
     .optional()
     .isArray({ min: 2, max: 2 })
@@ -106,10 +109,10 @@ const validateUpdateUser = [
     .withMessage("Whatsapp must be a valid Egyptian number."),
   check("governorate")
     .optional()
-    .isString()
-    .withMessage("Governorate must be a string")
-    .isIn(governorateNames)
-    .withMessage("Invalid governorate"),
+    .isInt()
+    .withMessage("Governorate must be an integer ID")
+    .isIn(validGovernorateIds)
+    .withMessage("Invalid governorate ID"),
   check("coordinates")
     .optional()
     .isArray({ min: 2, max: 2 })

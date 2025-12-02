@@ -15,7 +15,7 @@ This document outlines all the API endpoints for the application.
   - `email` (String, required): The user's email address.
   - `password` (String, required): The user's password. Password must be at least 6 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character.
   - `role` (String, optional): The user's role. Can be `user` or `expert`. Defaults to `user`.
-  - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
+  - `governorate` (Integer, optional): The governorate ID. See `/api/location/governorates` for the list of IDs and names.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
 - **Validation:**
   - Name must contain only Arabic characters and spaces
@@ -23,7 +23,7 @@ This document outlines all the API endpoints for the application.
   - Email must be a valid email address
   - Password must be at least 6 characters with uppercase, lowercase, number, and special character
   - Role must be either "user" or "expert"
-  - Governorate must be from the valid list
+  - Governorate must be a valid ID from the list
   - Coordinates must be an array of exactly 2 numbers
 - **Response:**
   - `message` (String): Success message.
@@ -47,7 +47,7 @@ This document outlines all the API endpoints for the application.
   - `phone` (String, optional): The user's valid Egyptian phone number. Required if email is not provided.
   - `password` (String, required): The user's password.
   - `role` (String, optional): The user's new role. Can be `user` or `expert`.
-  - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
+  - `governorate` (Integer, optional): The governorate ID.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
 - **Validation:**
   - Either email or phone must be provided
@@ -55,7 +55,7 @@ This document outlines all the API endpoints for the application.
   - Phone must match Egyptian phone number format (if provided)
   - Password is required
   - Role must be either "user" or "expert" (if provided)
-  - Governorate must be from the valid list (if provided)
+  - Governorate must be a valid ID (if provided)
   - Coordinates must be an array of exactly 2 numbers (if provided)
 - **Response:**
   - `message` (String): Success message.
@@ -125,14 +125,14 @@ This document outlines all the API endpoints for the application.
   - `Authorization`: `Bearer <access_token>`
 - **Body:**
   - `name` (String, optional): The user's new name. Must contain only Arabic characters and spaces.
-  - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
+  - `governorate` (Integer, optional): The governorate ID.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
   - `imageUrl` (String, optional): The user's new image URL.
   - `whatsapp` (String, optional): The user's WhatsApp number. Will be automatically converted to +20 format.
 - **Validation:**
   - Valid access token required
   - Name must contain only Arabic characters and spaces (if provided)
-  - Governorate must be from the valid list (if provided)
+  - Governorate must be a valid ID (if provided)
   - Coordinates must be an array of exactly 2 numbers (if provided)
   - Image URL must be a string (if provided)
   - Whatsapp must match Egyptian phone number format (if provided)
@@ -361,13 +361,13 @@ This document outlines all the API endpoints for the application.
   - `serviceId` (String, optional): The MongoDB ObjectId of the service.
   - `subServiceId` (String, optional): The MongoDB ObjectId of the sub-service.
   - `coordinates` (Array, optional): An array with two numbers [longitude, latitude].
-  - `governorate` (String, optional): The governorate. Must be one of the following: `القاهرة, الجيزة, الإسكندرية, الدقهلية, البحر الأحمر, البحيرة, الفيوم, الغربية, الإسماعيلية, المنوفية, القليوبية, الوادي الجديد, السويس, الشرقية, أسوان, بني سويف, بورسعيد, جنوب سيناء, كفر الشيخ, مطروح, قنا, شمال سيناء, أسيوط, سوهاج, الأقصر, دمياط, المنيا`.
+  - `governorate` (Integer, optional): The governorate ID.
   - `range` (Integer, optional): The range in kilometers to search for experts. Must be a positive integer. If not provided with coordinates, it will search for experts in the same governorate.
 - **Validation:**
   - Service ID must be a valid MongoDB ObjectId (if provided)
   - Sub-service ID must be a valid MongoDB ObjectId (if provided)
   - Coordinates must be an array of 2 numbers with valid latitude/longitude ranges (if provided)
-  - Governorate must be from the valid list (if provided)
+  - Governorate must be a valid ID (if provided)
   - Range must be a positive integer (if provided)
 - **Response:**
   - Array of nearby expert objects with populated service types. Each service type object contains:
@@ -668,6 +668,6 @@ This document outlines all the API endpoints for the application.
 - **Validation:**
   - None
 - **Response:**
-  - `governorates` (Array): List of governorate names.
+  - `governorates` (Array): List of governorate objects `{ id: Number, name: String }`.
 - **Error Responses:**
   - `500 Internal Server Error`: Server error

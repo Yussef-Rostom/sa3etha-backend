@@ -1,6 +1,10 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const { getGovernorate } = require("../utils/locationHelper");
+const {
+  getGovernorateNameById,
+  getGovernorateIdByName,
+} = require("../constants/governorates");
 const { sendEmail } = require("../utils/emailService");
 
 const formatPhoneNumber = (phone) => {
@@ -40,6 +44,11 @@ const prepareUser = (user) => {
   delete userObject.refreshToken;
   if (userObject.role !== "expert") {
     delete userObject.expertProfile;
+  }
+  if (userObject.location && userObject.location.governorate) {
+    userObject.location.governorate = getGovernorateIdByName(
+      userObject.location.governorate
+    );
   }
   return userObject;
 };
@@ -81,7 +90,10 @@ const registerUser = async (req, res) => {
       user.location = {
         type: "Point",
         coordinates: coordinates,
-        governorate: governorate || calculatedGovernorate || undefined,
+        governorate:
+          getGovernorateNameById(governorate) ||
+          calculatedGovernorate ||
+          undefined,
       };
     }
 
@@ -138,7 +150,10 @@ const loginUser = async (req, res) => {
       user.location = {
         type: "Point",
         coordinates: coordinates,
-        governorate: governorate || calculatedGovernorate || undefined,
+        governorate:
+          getGovernorateNameById(governorate) ||
+          calculatedGovernorate ||
+          undefined,
       };
     }
 
@@ -234,14 +249,18 @@ const updateUser = async (req, res) => {
     user.imageUrl = imageUrl || user.imageUrl;
     if (whatsapp) user.whatsapp = whatsapp;
 
-    if (req.body.coordinates) {
-      const [lon, lat] = req.body.coordinates;
-      const calculatedGovernorate = getGovernorate(lon, lat);
+    if (req.body.coordinates || req.body.governorate) {
+      let calculatedGovernorate;
+      if (req.body.coordinates) {
+        const [lon, lat] = req.body.coordinates;
+        calculatedGovernorate = getGovernorate(lon, lat);
+      }
+
       user.location = {
         type: "Point",
-        coordinates: req.body.coordinates,
+        coordinates: req.body.coordinates || user.location.coordinates,
         governorate:
-          req.body.governorate ||
+          getGovernorateNameById(req.body.governorate) ||
           calculatedGovernorate ||
           user.location.governorate,
       };
