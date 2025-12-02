@@ -303,6 +303,34 @@ This document outlines all the API endpoints for the application.
   - `400 Bad Request`: Invalid response data
   - `403 Forbidden`: User is not authorized (not the customer for this contact)
   - `404 Not Found`: Contact request not found
+  - `404 Not Found`: Contact request not found
+  - `500 Internal Server Error`: Server error
+
+### 4. Review Expert
+
+- **URL:** `/api/contacts/:id/review`
+- **Method:** `POST`
+- **Description:** Allows a customer to review an expert after a confirmed service.
+- **Headers:**
+  - `Authorization`: `Bearer <access_token>`
+- **Parameters:**
+  - `id` (String, required): The ID of the contact request.
+- **Body:**
+  - `rating` (Number, required): Rating from 1 to 5.
+  - `comment` (String, optional): Review comment (max 500 characters).
+- **Validation:**
+  - Valid access token required
+  - User must be the customer associated with the contact request
+  - Contact request must be confirmed
+  - User must not have already reviewed this contact
+  - Rating must be an integer between 1 and 5
+  - Comment must be a string with max 500 characters (if provided)
+- **Response:**
+  - `message` (String): Success message.
+- **Error Responses:**
+  - `400 Bad Request`: Validation errors, duplicate review, invalid status
+  - `403 Forbidden`: User is not authorized (not the customer for this contact)
+  - `404 Not Found`: Contact request not found
   - `500 Internal Server Error`: Server error
 
 ## Expert Routes
@@ -395,6 +423,9 @@ This document outlines all the API endpoints for the application.
   - Expert ID must be a valid MongoDB ObjectId
 - **Response:**
   - `expert` (Object): The expert's profile.
+    - `expertProfile` (Object):
+      - `averageRating` (Number): Average rating.
+      - `ratingCount` (Number): Total number of reviews.
 - **Error Responses:**
   - `400 Bad Request`: Invalid expert ID
   - `401 Unauthorized`: Missing or invalid access token

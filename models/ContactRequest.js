@@ -45,7 +45,7 @@ const contactRequestSchema = new mongoose.Schema(
     clientResponse: {
       type: Boolean,
     },
-    
+
     // Follow-up System Fields
     expertCheckSentAt: {
       type: Date,
@@ -65,6 +65,10 @@ const contactRequestSchema = new mongoose.Schema(
     },
     customerResponseAt: {
       type: Date,
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false,
     },
   },
   {

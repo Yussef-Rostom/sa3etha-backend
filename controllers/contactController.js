@@ -212,8 +212,71 @@ const handleCustomerResponse = async (req, res) => {
   }
 };
 
+// Review Expert
+const reviewExpert = async (req, res) => {
+  const { id } = req.params; // ContactRequest ID
+  const { rating, comment } = req.body;
+  const customerId = req.user.id;
+
+  try {
+    const contact = await ContactRequest.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact request not found" });
+    }
+
+    // Verify ownership
+    if (contact.customer.toString() !== customerId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Verify status
+    if (contact.status !== "confirmed") {
+      return res.status(400).json({ message: "Can only review confirmed contacts" });
+    }
+
+    // Verify not already reviewed
+    if (contact.isReviewed) {
+      return res.status(400).json({ message: "You have already reviewed this expert for this service" });
+    }
+
+    // Create Review
+    const Review = require("../models/Review");
+    await Review.create({
+      customer: customerId,
+      expert: contact.expert,
+      contactRequest: contact._id,
+      rating,
+      comment,
+    });
+
+    // Update ContactRequest
+    contact.isReviewed = true;
+    await contact.save();
+
+    // Update Expert Rating
+    const expert = await User.findById(contact.expert);
+    const currentRating = expert.expertProfile.averageRating || 0;
+    const currentCount = expert.expertProfile.ratingCount || 0;
+
+    const newCount = currentCount + 1;
+    const newRating = ((currentRating * currentCount) + rating) / newCount;
+
+    expert.expertProfile.averageRating = newRating;
+    expert.expertProfile.ratingCount = newCount;
+    await expert.save();
+
+    return res.status(201).json({ message: "Review submitted successfully" });
+
+  } catch (error) {
+    console.error("Error in reviewExpert:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   getExpertContact,
   handleExpertResponse,
   handleCustomerResponse,
+  reviewExpert,
 };
