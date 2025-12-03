@@ -19,7 +19,7 @@ const getAvailableExperts = async (req, res) => {
       role: "expert",
       "expertProfile.isAvailable": true,
     })
-      .select("-password -phone -email -fcmToken -refreshToken -otp -otpExpires")
+      .select("-password -phone -email -fcmToken -refreshToken -otp -otpExpires -whatsapp")
       .populate({
         path: "expertProfile.serviceTypes.subServiceId",
         model: "SubService",
@@ -122,6 +122,7 @@ const getNearExperts = async (req, res) => {
         refreshToken: 0,
         otp: 0,
         otpExpires: 0,
+        whatsapp: 0,
       },
     });
 
@@ -266,7 +267,7 @@ const updateExpertProfile = async (req, res) => {
 const getExpertProfileById = async (req, res) => {
   try {
     const expert = await User.findById(req.params.id).select(
-      "-password -phone -email",
+      "-password -phone -email -whatsapp",
     );
     if (!expert || expert.role !== "expert") {
       return res.status(404).json({ message: "Expert not found" });
