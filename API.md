@@ -587,7 +587,7 @@ This document outlines all the API endpoints for the application.
 
 ### 1. Upload profile image
 
-- **URL:** `/api/upload/profile-image`
+- **URL:** `/api/uploads/profile-image`
 - **Method:** `POST`
 - **Description:** Uploads a profile image for the user.
 - **Headers:**
@@ -609,7 +609,7 @@ This document outlines all the API endpoints for the application.
 
 ### 2. Upload service image
 
-- **URL:** `/api/upload/service-image`
+- **URL:** `/api/uploads  /service-image`
 - **Method:** `POST`
 - **Description:** Uploads an image for a service.
 - **Headers:**
