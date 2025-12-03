@@ -247,7 +247,7 @@ This document outlines all the API endpoints for the application.
     - `name` (String): The expert's name.
     - `phone` (String): The expert's phone number.
     - `email` (String): The expert's email address.
-    - `governorate` (String): The expert's governorate.
+    - `governorate` (String): The expert's governorate name.
     - `whatsappLink` (String): Link to open WhatsApp chat with the expert.
   - `contactRequest` (Object): The created contact request details.
     - `id` (String): The contact request ID.

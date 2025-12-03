@@ -7,7 +7,7 @@ const { getGovernorateNameById, getGovernorateIdByName } = require("../constants
 const formatExpertResponse = (expert) => {
   const expertObj = expert.toObject ? expert.toObject() : expert;
   if (expertObj.governorate) {
-    expertObj.governorate = getGovernorateIdByName(expertObj.governorate);
+    // expertObj.governorate is already the Name stored in DB
   }
   return expertObj;
 };
@@ -181,7 +181,7 @@ const updateAvailability = async (req, res) => {
         _id: expert._id,
         name: expert.name,
         isAvailable: expert.expertProfile.isAvailable,
-        governorate: getGovernorateIdByName(expert.governorate),
+        governorate: expert.governorate,
       },
     });
   } catch (error) {
@@ -256,7 +256,7 @@ const updateExpertProfile = async (req, res) => {
         imageUrl: expert.imageUrl,
         location: expert.location,
         expertProfile: expert.expertProfile,
-        governorate: getGovernorateIdByName(expert.governorate),
+        governorate: expert.governorate,
       },
     });
   } catch (error) {

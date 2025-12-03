@@ -46,7 +46,7 @@ const prepareUser = (user) => {
     delete userObject.expertProfile;
   }
   if (userObject.governorate) {
-    userObject.governorate = getGovernorateIdByName(userObject.governorate);
+    // userObject.governorate is already the Name stored in DB
   }
   return userObject;
 };

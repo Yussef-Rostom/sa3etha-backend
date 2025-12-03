@@ -37,41 +37,41 @@ async function testGovernorateMapping() {
         const registerResponse = await axios.post(`${API_URL}/auth/register`, testUser);
         const { user, accessToken } = registerResponse.data;
 
-        if (user.governorate === 1) {
-            console.log("✅ Registration passed. User governorate ID:", user.governorate);
+        if (user.governorate === "القاهرة") {
+            console.log("✅ Registration passed. User governorate Name:", user.governorate);
         } else {
             console.error("❌ Registration failed. User governorate:", user.governorate);
         }
 
         // 3. Login User and check Governorate ID
-        console.log("\n3. Testing Login and checking Governorate ID...");
+        console.log("\n3. Testing Login and checking Governorate Name...");
         const loginResponse = await axios.post(`${API_URL}/auth/login`, {
             email: testUser.email,
             password: testUser.password,
         });
 
-        if (loginResponse.data.user.governorate === 1) {
-            console.log("✅ Login passed. User governorate ID:", loginResponse.data.user.governorate);
+        if (loginResponse.data.user.governorate === "القاهرة") {
+            console.log("✅ Login passed. User governorate Name:", loginResponse.data.user.governorate);
         } else {
             console.error("❌ Login failed. User governorate:", loginResponse.data.user.governorate);
         }
 
         // 4. Update User Profile with new Governorate ID
-        console.log("\n4. Testing Update Profile with Governorate ID...");
+        console.log("\n4. Testing Update Profile with Governorate Name...");
         const updateResponse = await axios.put(
             `${API_URL}/auth/me`,
             { governorate: 2 }, // Giza
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
-        if (updateResponse.data.user.governorate === 2) {
-            console.log("✅ Update Profile passed. New governorate ID:", updateResponse.data.user.governorate);
+        if (updateResponse.data.user.governorate === "الجيزة") {
+            console.log("✅ Update Profile passed. New governorate Name:", updateResponse.data.user.governorate);
         } else {
             console.error("❌ Update Profile failed. User governorate:", updateResponse.data.user.governorate);
         }
 
         // 5. Get Near Experts with Governorate ID
-        console.log("\n5. Testing Get Near Experts with Governorate ID...");
+        console.log("\n5. Testing Get Near Experts with Governorate Name...");
         // Register another expert in Giza (ID 2)
         const expertUser = {
             name: "خبير تجربة",
@@ -96,10 +96,10 @@ async function testGovernorateMapping() {
         const foundExpert = nearExpertsResponse.data.experts.find(e => e._id === expertRegisterResponse.data.user._id);
 
         if (foundExpert) {
-            if (foundExpert.governorate === 2) {
-                console.log("✅ Get Near Experts passed. Found created expert with correct governorate ID:", foundExpert.governorate);
+            if (foundExpert.governorate === "الجيزة") {
+                console.log("✅ Get Near Experts passed. Found created expert with correct governorate Name:", foundExpert.governorate);
             } else {
-                console.error("❌ Get Near Experts failed. Expert governorate ID mismatch:", foundExpert.governorate);
+                console.error("❌ Get Near Experts failed. Expert governorate Name mismatch:", foundExpert.governorate);
             }
         } else {
             console.error("❌ Get Near Experts failed. Created expert not found in list.");
