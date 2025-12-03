@@ -21,7 +21,7 @@ const sendExpertSuggestions = async () => {
         { lastSuggestionSentAt: null },
         { lastSuggestionSentAt: { $lte: oneHourAgo } },
       ],
-    }).select("name fcmToken lastSearch location");
+    }).select("name fcmToken lastSearch location governorate");
 
     console.log(`Found ${eligibleUsers.length} eligible users for suggestions`);
 
@@ -59,12 +59,12 @@ const sendExpertSuggestions = async () => {
         const pipeline = [];
 
         // Geographic filtering
-        if (user.location?.coordinates) {
-          const userGovernorate = user.location.governorate;
+        if (user.governorate || user.location?.coordinates) {
+          const userGovernorate = user.governorate;
           if (userGovernorate) {
             // Same governorate
             pipeline.push({
-              $match: { "location.governorate": userGovernorate },
+              $match: { governorate: userGovernorate },
             });
           } else {
             // Use geo-near if no governorate

@@ -2,7 +2,15 @@ const User = require("../models/User");
 const SubService = require("../models/SubService");
 const mongoose = require("mongoose");
 const { getGovernorate } = require("../utils/locationHelper");
-const { getGovernorateNameById } = require("../constants/governorates");
+const { getGovernorateNameById, getGovernorateIdByName } = require("../constants/governorates");
+
+const formatExpertResponse = (expert) => {
+  const expertObj = expert.toObject ? expert.toObject() : expert;
+  if (expertObj.governorate) {
+    expertObj.governorate = getGovernorateIdByName(expertObj.governorate);
+  }
+  return expertObj;
+};
 
 // Get all available experts
 const getAvailableExperts = async (req, res) => {
@@ -21,7 +29,7 @@ const getAvailableExperts = async (req, res) => {
         },
       });
 
-    res.status(200).json({ experts });
+    res.status(200).json({ experts: experts.map(formatExpertResponse) });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
   }
@@ -53,8 +61,8 @@ const getNearExperts = async (req, res) => {
             searchCoordinates = [long, lat];
           }
         }
-        if (user?.location?.governorate) {
-          searchGovernorate = user.location.governorate;
+        if (user?.governorate) {
+          searchGovernorate = user.governorate;
         }
       } catch (userError) {
         // If user lookup fails, continue without user location
@@ -78,12 +86,12 @@ const getNearExperts = async (req, res) => {
       } else {
         const detectedGovernorate = getGovernorate(searchCoordinates[0], searchCoordinates[1]);
         if (detectedGovernorate) {
-          pipeline.push({ $match: { "location.governorate": detectedGovernorate } });
+          pipeline.push({ $match: { governorate: detectedGovernorate } });
         }
       }
     } else if (searchGovernorate) {
       pipeline.push({
-        $match: { "location.governorate": searchGovernorate },
+        $match: { governorate: searchGovernorate },
       });
     }
 
@@ -143,7 +151,7 @@ const getNearExperts = async (req, res) => {
       }
     }
 
-    res.status(200).json({ experts });
+    res.status(200).json({ experts: experts.map(formatExpertResponse) });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
   }
@@ -172,6 +180,7 @@ const updateAvailability = async (req, res) => {
         _id: expert._id,
         name: expert.name,
         isAvailable: expert.expertProfile.isAvailable,
+        governorate: getGovernorateIdByName(expert.governorate),
       },
     });
   } catch (error) {
@@ -214,13 +223,14 @@ const updateExpertProfile = async (req, res) => {
     if (req.body.coordinates) {
       const [lon, lat] = req.body.coordinates;
       const calculatedGovernorate = getGovernorate(lon, lat);
+      expert.governorate =
+        getGovernorateNameById(req.body.governorate) ||
+        calculatedGovernorate ||
+        expert.governorate;
+
       expert.location = {
         type: "Point",
         coordinates: req.body.coordinates,
-        governorate:
-          getGovernorateNameById(req.body.governorate) ||
-          calculatedGovernorate ||
-          expert.location?.governorate,
       };
     }
 
@@ -245,6 +255,7 @@ const updateExpertProfile = async (req, res) => {
         imageUrl: expert.imageUrl,
         location: expert.location,
         expertProfile: expert.expertProfile,
+        governorate: getGovernorateIdByName(expert.governorate),
       },
     });
   } catch (error) {
@@ -260,7 +271,7 @@ const getExpertProfileById = async (req, res) => {
     if (!expert || expert.role !== "expert") {
       return res.status(404).json({ message: "Expert not found" });
     }
-    res.status(200).json({ expert });
+    res.status(200).json({ expert: formatExpertResponse(expert) });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message, error });
   }

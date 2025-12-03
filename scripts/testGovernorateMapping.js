@@ -30,16 +30,17 @@ async function testGovernorateMapping() {
             phone: `010${Math.floor(10000000 + Math.random() * 90000000)}`,
             role: "user",
             governorate: 1, // Cairo
+            governorate: "1", // Cairo
             coordinates: [31.2357, 30.0444],
         };
 
         const registerResponse = await axios.post(`${API_URL}/auth/register`, testUser);
         const { user, accessToken } = registerResponse.data;
 
-        if (user.location.governorate === 1) {
-            console.log("✅ Registration passed. User governorate ID:", user.location.governorate);
+        if (user.governorate === 1) {
+            console.log("✅ Registration passed. User governorate ID:", user.governorate);
         } else {
-            console.error("❌ Registration failed. User governorate:", user.location.governorate);
+            console.error("❌ Registration failed. User governorate:", user.governorate);
         }
 
         // 3. Login User and check Governorate ID
@@ -49,10 +50,10 @@ async function testGovernorateMapping() {
             password: testUser.password,
         });
 
-        if (loginResponse.data.user.location.governorate === 1) {
-            console.log("✅ Login passed. User governorate ID:", loginResponse.data.user.location.governorate);
+        if (loginResponse.data.user.governorate === 1) {
+            console.log("✅ Login passed. User governorate ID:", loginResponse.data.user.governorate);
         } else {
-            console.error("❌ Login failed. User governorate:", loginResponse.data.user.location.governorate);
+            console.error("❌ Login failed. User governorate:", loginResponse.data.user.governorate);
         }
 
         // 4. Update User Profile with new Governorate ID
@@ -63,43 +64,45 @@ async function testGovernorateMapping() {
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
-        if (updateResponse.data.user.location.governorate === 2) {
-            console.log("✅ Update Profile passed. New governorate ID:", updateResponse.data.user.location.governorate);
+        if (updateResponse.data.user.governorate === 2) {
+            console.log("✅ Update Profile passed. New governorate ID:", updateResponse.data.user.governorate);
         } else {
-            console.error("❌ Update Profile failed. User governorate:", updateResponse.data.user.location.governorate);
+            console.error("❌ Update Profile failed. User governorate:", updateResponse.data.user.governorate);
         }
 
         // 5. Get Near Experts with Governorate ID
         console.log("\n5. Testing Get Near Experts with Governorate ID...");
-        // First create an expert in the same governorate (Giza - 2)
+        // Register another expert in Giza (ID 2)
         const expertUser = {
-            name: "خبير تست",
-            email: `expertgov${Date.now()}@example.com`,
+            name: "خبير تجربة",
+            phone: `012${Math.floor(10000000 + Math.random() * 90000000)}`,
+            email: `expert_test_${Date.now()}@example.com`,
             password: "Password123!",
-            phone: `011${Math.floor(10000000 + Math.random() * 90000000)}`,
             role: "expert",
             governorate: 2, // Giza
-            coordinates: [31.2156, 30.0131],
+            expertProfile: {
+                isAvailable: true,
+                serviceTypes: []
+            }
         };
 
         const expertRegisterResponse = await axios.post(`${API_URL}/auth/register`, expertUser);
-        const expertToken = expertRegisterResponse.data.accessToken;
+        const expertAccessToken = expertRegisterResponse.data.accessToken;
 
-        // Make expert available
-        await axios.put(
-            `${API_URL}/experts/availability`,
-            { isAvailable: true },
-            { headers: { Authorization: `Bearer ${expertToken}` } }
-        );
-
-        const nearExpertsResponse = await axios.get(`${API_URL}/experts/near?governorate=2`);
+        const nearExpertsResponse = await axios.get(`${API_URL}/experts/near?governorate=2`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
 
         const foundExpert = nearExpertsResponse.data.experts.find(e => e._id === expertRegisterResponse.data.user._id);
 
         if (foundExpert) {
-            console.log("✅ Get Near Experts passed. Found created expert.");
+            if (foundExpert.governorate === 2) {
+                console.log("✅ Get Near Experts passed. Found created expert with correct governorate ID:", foundExpert.governorate);
+            } else {
+                console.error("❌ Get Near Experts failed. Expert governorate ID mismatch:", foundExpert.governorate);
+            }
         } else {
-            console.log("⚠️ Get Near Experts: Created expert not found in list (might be other filters), but request succeeded.");
+            console.error("❌ Get Near Experts failed. Created expert not found in list.");
             console.log("Response length:", nearExpertsResponse.data.experts.length);
         }
 

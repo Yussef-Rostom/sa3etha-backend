@@ -45,10 +45,8 @@ const prepareUser = (user) => {
   if (userObject.role !== "expert") {
     delete userObject.expertProfile;
   }
-  if (userObject.location && userObject.location.governorate) {
-    userObject.location.governorate = getGovernorateIdByName(
-      userObject.location.governorate
-    );
+  if (userObject.governorate) {
+    userObject.governorate = getGovernorateIdByName(userObject.governorate);
   }
   return userObject;
 };
@@ -84,17 +82,24 @@ const registerUser = async (req, res) => {
       role,
     });
 
-    if (coordinates) {
-      const [lon, lat] = coordinates;
-      const calculatedGovernorate = getGovernorate(lon, lat);
-      user.location = {
-        type: "Point",
-        coordinates: coordinates,
-        governorate:
-          getGovernorateNameById(governorate) ||
-          calculatedGovernorate ||
-          undefined,
-      };
+    if (coordinates || governorate) {
+      let calculatedGovernorate;
+      if (coordinates) {
+        const [lon, lat] = coordinates;
+        calculatedGovernorate = getGovernorate(lon, lat);
+      }
+
+      user.governorate =
+        getGovernorateNameById(governorate) ||
+        calculatedGovernorate ||
+        undefined;
+
+      if (coordinates) {
+        user.location = {
+          type: "Point",
+          coordinates: coordinates,
+        };
+      }
     }
 
     await user.save();
@@ -144,17 +149,24 @@ const loginUser = async (req, res) => {
       user.role = role;
     }
 
-    if (coordinates) {
-      const [lon, lat] = coordinates;
-      const calculatedGovernorate = getGovernorate(lon, lat);
-      user.location = {
-        type: "Point",
-        coordinates: coordinates,
-        governorate:
-          getGovernorateNameById(governorate) ||
-          calculatedGovernorate ||
-          undefined,
-      };
+    if (coordinates || governorate) {
+      let calculatedGovernorate;
+      if (coordinates) {
+        const [lon, lat] = coordinates;
+        calculatedGovernorate = getGovernorate(lon, lat);
+      }
+
+      user.governorate =
+        getGovernorateNameById(governorate) ||
+        calculatedGovernorate ||
+        undefined;
+
+      if (coordinates) {
+        user.location = {
+          type: "Point",
+          coordinates: coordinates,
+        };
+      }
     }
 
     await user.save();
@@ -256,14 +268,20 @@ const updateUser = async (req, res) => {
         calculatedGovernorate = getGovernorate(lon, lat);
       }
 
-      user.location = {
-        type: "Point",
-        coordinates: req.body.coordinates || user.location.coordinates,
-        governorate:
-          getGovernorateNameById(req.body.governorate) ||
-          calculatedGovernorate ||
-          user.location.governorate,
-      };
+      const newCoordinates = req.body.coordinates || user.location?.coordinates;
+      const newGovernorate =
+        getGovernorateNameById(req.body.governorate) ||
+        calculatedGovernorate ||
+        user.governorate;
+
+      user.governorate = newGovernorate;
+
+      if (newCoordinates && newCoordinates.length === 2) {
+        user.location = {
+          type: "Point",
+          coordinates: newCoordinates,
+        };
+      }
     }
 
     await user.save();

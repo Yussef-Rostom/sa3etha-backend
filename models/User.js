@@ -57,6 +57,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    governorate: {
+      type: String,
+    },
     location: {
       type: {
         type: String,
@@ -65,7 +68,6 @@ const userSchema = new mongoose.Schema(
       coordinates: {
         type: [Number],
       },
-      governorate: String,
     },
     expertProfile: {
       serviceTypes: [
